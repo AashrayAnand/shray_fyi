@@ -1,0 +1,30 @@
+theme = "after-dark"
+
+# The URL the site will be built for
+base_url = "https://www.shray.fyi/"
+
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+[markdown]
+highlight_code = true
+
+taxonomies = [
+    # You can enable/disable RSS
+    {name = "categories", feed = true},
+    {name = "tags", feed = true},
+]
+
+build_search_index = true
+
+[search]
+index_format = "elasticlunr_json"
+
+[extra]
+author = "Aashray Anand"
+codeblock = true
+enable_search = true

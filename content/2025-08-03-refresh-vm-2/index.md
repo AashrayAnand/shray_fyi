@@ -1,6 +1,12 @@
-# Using ```mprotect``` For Memory Protection
++++
+title = "Using mprotect For Memory Protection"
+description = "Deep dive into the Linux mprotect system call, including /proc/[pid]/maps analysis and shared memory management"
+date = 2025-08-03
++++
 
-I recently took some notes when looking into the linux ```mprotect``` interface, which enables setting the protection on a region of [memory](https://linux.die.net/man/2/mprotect). In particular, this exercise was related to how ```mprotect``` interacts with memory-mapped shared memory segments.
+# Using `mprotect` For Memory Protection
+
+I recently took some notes when looking into the linux `mprotect` interface, which enables setting the protection on a region of [memory](https://linux.die.net/man/2/mprotect). In particular, this exercise was related to how ```mprotect``` interacts with memory-mapped shared memory segments.
 
 ## Understanding /proc/[pid]/maps
 
@@ -147,7 +153,7 @@ void* access_shared_memory(const char* name, size_t size) {
 In the prior example, we used ```mprotect``` to change the memory protection level for portions
 of a shared memory segment, which may be memory-mapped by other processes as well.
 
-We can refer to the key concepts I went over before in [Refreshing Virtual Memory Concepts](./virtual_memory_1.md) to understand how applying controls on a shared memory segment would affect the underlying processes. Although multiple processes may memory map the same shared memory segment, they each have a distinct virtual memory area that corresponds to this memory mappings, which are controlled independently of one another.
+We can refer to the key concepts I went over before in [Refreshing Virtual Memory Concepts](@/2025-07-25-refresh-vm-1/index.md) to understand how applying controls on a shared memory segment would affect the underlying processes. Although multiple processes may memory map the same shared memory segment, they each have a distinct virtual memory area that corresponds to this memory mappings, which are controlled independently of one another.
 
 Therefore, although we may ```mprotect``` a virtual address that correlates to shared memory, we will only end up enforcing the protection level on ourself, rather than other processes accessing the same shared memory.
 
