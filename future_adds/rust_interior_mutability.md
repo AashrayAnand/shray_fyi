@@ -16,7 +16,13 @@ This creates a challenge: **How do we safely mutate data when multiple threads n
 
 ## Rust's Solution: Interior Mutability
 
-Rust provides several types that implement "interior mutability" - they allow mutation through immutable references in a controlled, safe way.
+Rust provides several types that implement "interior mutability" - they allow mutation through immutable references in a controlled, safe way. At a high-level, this pattern enables the following:
+
+1. Multiple threads can share immutable references while safely mutating data
+2. Methods can take `&self` instead of `&mut self` while still allowing mutation
+3. The type system ensures safe concurrent access
+
+Interior mutability enforces "gates" to provide mutable data access. The Rust type system ensures that this access is always safe and properly synchronized.
 
 ### Key Interior Mutability Types
 
@@ -28,11 +34,12 @@ Rust provides several types that implement "interior mutability" - they allow mu
 
 ## Example: Thread-Safe Key-Value Store
 
-Let's examine how Rust's interior mutability differs from C++ approaches.
+We can see how interior mutability allows access to a multi-threaded hash table:
 
 ### Rust Implementation
 
-```cpp
+```rust
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -86,6 +93,7 @@ fn main() {
 ### C++ Equivalent
 
 ```cpp
+
 #include <unordered_map>
 #include <mutex>
 #include <memory>
@@ -132,7 +140,9 @@ int main() {
 ### 1. **Type-Level Safety vs Runtime Safety**
 
 **Rust:**
-```cpp
+
+```rust
+
 // The Mutex is part of the type - impossible to forget to lock
 Arc<Mutex<HashMap<String, String>>>
 //     ↑
@@ -140,7 +150,9 @@ Arc<Mutex<HashMap<String, String>>>
 ```
 
 **C++:**
+
 ```cpp
+
 // Separate mutex - easy to forget
 std::mutex mutex_;           // Separate variable
 std::unordered_map<...> data_; // Separate variable
@@ -155,7 +167,9 @@ void set(...) {
 ### 2. **Compile-Time Guarantees**
 
 **Rust:**
-```cpp
+
+```rust
+
 // Compile-time enforcement of thread safety
 let kvs = Arc::new(KeyValueStore::new());
 let ref1 = &kvs;  // Immutable reference
@@ -164,7 +178,9 @@ let ref2 = &kvs;  // Another immutable reference - OK!
 ```
 
 **C++:**
+
 ```cpp
+
 // No compile-time guarantees
 auto kvs = std::make_shared<KeyValueStore>();
 // Can accidentally create multiple mutable references at runtime
@@ -173,7 +189,8 @@ auto kvs = std::make_shared<KeyValueStore>();
 ### 3. **Automatic Resource Management**
 
 **Rust:**
-```cpp
+
+```rust
 pub fn set(&self, key: String, value: String) {
     if let Ok(mut map) = self.data.lock() {
         map.insert(key, value);
@@ -184,7 +201,9 @@ pub fn set(&self, key: String, value: String) {
 ```
 
 **C++:**
+
 ```cpp
+
 void set(const std::string& key, const std::string& value) {
     std::lock_guard<std::mutex> lock(mutex_);
     data_[key] = value;
@@ -197,7 +216,8 @@ void set(const std::string& key, const std::string& value) {
 
 ### The Magic of `DerefMut`
 
-```cpp
+```rust
+
 pub fn set(&self, key: String, value: String) {
     if let Ok(mut map) = self.data.lock() {  // ← Returns MutexGuard<HashMap>
         map.insert(key, value);               // ← Automatically dereferences to &mut HashMap
@@ -224,77 +244,6 @@ kvs1.set("key1".to_string(), "value1".to_string());  // Locks, mutates, unlocks
 kvs2.set("key2".to_string(), "value2".to_string());  // Waits, then locks, mutates, unlocks
 ```
 
-## Other Interior Mutability Patterns
-
-### `RefCell<T>` - Single-Threaded Interior Mutability
-
-```cpp
-use std::cell::RefCell;
-
-struct Counter {
-    count: RefCell<i32>
-}
-
-impl Counter {
-    fn new() -> Self {
-        Self { count: RefCell::new(0) }
-    }
-    
-    fn increment(&self) {  // &self, not &mut self!
-        let mut count = self.count.borrow_mut();
-        *count += 1;
-    }
-    
-    fn get(&self) -> i32 {
-        *self.count.borrow()
-    }
-}
-```
-
-### `RwLock<T>` - Multiple Readers, Single Writer
-
-```cpp
-use std::sync::RwLock;
-
-struct SharedData {
-    data: Arc<RwLock<HashMap<String, String>>>
-}
-
-impl SharedData {
-    fn read(&self, key: &str) -> Option<String> {
-        if let Ok(map) = self.data.read() {  // Multiple readers can access simultaneously
-            map.get(key).cloned()
-        } else {
-            None
-        }
-    }
-    
-    fn write(&self, key: String, value: String) {
-        if let Ok(mut map) = self.data.write() {  // Exclusive access for writing
-            map.insert(key, value);
-        }
-    }
-}
-```
-
-## Benefits of Rust's Approach
-
-### 1. **Zero-Cost Abstractions**
-- The mutex is part of the type, enabling better compiler optimizations
-- No runtime overhead for checking if synchronization is needed
-
-### 2. **Compile-Time Safety**
-- Impossible to forget to acquire locks
-- Type system prevents data races at compile time
-
-### 3. **Automatic Resource Management**
-- Locks are automatically released when guards go out of scope
-- Exception-safe (panic-safe in Rust)
-
-### 4. **Clear Ownership Semantics**
-- The type system makes ownership and borrowing explicit
-- No hidden aliasing or undefined behavior
-
 ## When to Use Each Pattern
 
 ### `Mutex<T>` - When you need:
@@ -316,15 +265,3 @@ impl SharedData {
 - Single-threaded interior mutability
 - Copy types only
 - Zero runtime overhead
-
-## Conclusion
-
-Rust's interior mutability pattern provides a powerful way to safely mutate data through immutable references. This is essential for:
-
-1. **Thread-safe programming** - Multiple threads can share immutable references while safely mutating data
-2. **API design** - Methods can take `&self` instead of `&mut self` while still allowing mutation
-3. **Memory safety** - The type system ensures safe concurrent access
-
-The key insight is that interior mutability types act as "gates" that provide controlled access to mutable data, while the Rust type system ensures that this access is always safe and properly synchronized.
-
-This pattern is one of Rust's most powerful features for building safe, concurrent systems. 

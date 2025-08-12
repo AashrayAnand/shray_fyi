@@ -19,7 +19,8 @@ Rust's type system provides two complementary safety mechanisms, **Ownership**, 
 
 ### Rust's Ownership Rules
 
-```cpp
+```rust
+
 // Each value has exactly one owner
 let s = String::from("hello");  // s owns the string
 let t = s;                      // ownership moves to t
@@ -49,7 +50,7 @@ int main() {
 
 #### 1. **No Double-Free**
 
-```cpp
+```rust
 // Rust: Impossible to double-free
 let s = String::from("hello");
 // Only one owner can drop the string
@@ -66,7 +67,8 @@ delete t;            // Double-free! Undefined behavior
 
 #### 2. **No Use-After-Free**
 
-```cpp
+```rust
+
 // Rust: Impossible to use after free
 fn create_string() -> String {
     String::from("hello")
@@ -88,14 +90,17 @@ delete s;           // Memory freed
 std::cout << *s;    // Use-after-free! Undefined behavior
 ```
 
-#### 3. **Automatic Cleanup**
+#### 3. **Automatic Memory Management**
 
-```cpp
+Although Rust is not a garbage-collected language like Java, it is able to achieve automatic memory management without additional overhead, by relying on the lifetime of owned data to dictate when to release this data.
+
+```rust
+
 // Rust: Automatic cleanup
 fn process_data() {
     let data = vec![1, 2, 3, 4, 5];  // Allocated on stack
     // Process data...
-    // Automatically dropped when function ends
+    // Automatically dropped when function ends and data is out of scope.
 }
 ```
 
@@ -113,7 +118,8 @@ void process_data() {
 
 ### Rust's Borrowing Rules
 
-```cpp
+```rust
+
 // You can have either:
 // - One mutable reference (&mut T)
 // - Any number of immutable references (&T)
@@ -139,7 +145,8 @@ int* ref2 = &data[0];  // Multiple mutable references - allowed but dangerous
 
 #### 1. **No Data Races**
 
-```cpp
+```rust
+
 // Rust: Impossible to have data races in single thread
 let mut counter = 0;
 let ref1 = &mut counter;
@@ -159,7 +166,8 @@ int* ref2 = &counter;  // Multiple mutable references
 
 #### 2. **Deterministic Behavior**
 
-```cpp
+```rust
+
 // Rust: Predictable results
 let mut data = vec![1, 2, 3];
 let ref_data = &mut data;
@@ -178,7 +186,8 @@ int* ref2 = &data[0];
 ```
 
 #### 3. **Iterator Safety**
-```cpp
+```rust
+
 // Rust: Iterator invalidation prevented at compile time
 let mut vec = vec![1, 2, 3];
 let iter = vec.iter();  // Immutable borrow
@@ -191,21 +200,6 @@ std::vector<int> vec = {1, 2, 3};
 auto iter = vec.begin();
 vec.push_back(4);  // Iterator invalidated!
 // *iter;           // Undefined behavior
-```
-
-## Automatic Memory Management through Ownership and Borrowing
-
-Although Rust is not a garbage-collected language like Java, it is able to achieve automatic memory management without additional overhead, by relying on the lifetime of owned data to dictate when to release this data.
-
-#### Rust (Automatic)
-
-```cpp
-// Compile-time guarantees
-let s = String::from("hello");
-let s_ref = &s;
-...
-// Underlying data for s is automatically released once owner and all references are out of scope.
-// This can be determined at compile time, no GC required.
 ```
 
 ## Concurrency Safety

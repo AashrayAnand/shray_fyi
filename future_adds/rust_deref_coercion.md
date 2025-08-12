@@ -10,14 +10,18 @@ Not only that but there are different types of trait-based deref that Rust uses 
 ## Basic Dereferencing
 
 **Manual dereferencing** with `*`:
-```cpp
+
+```rust
+
 let x = 5;
 let r = &x;
 assert_eq!(5, *r);  // Explicit dereference
 ```
 
 **Automatic dereferencing** in method calls:
-```cpp
+
+```rust
+
 let s = String::from("hello");
 let len = s.len();  // Calls str::len() automatically
 ```
@@ -26,7 +30,8 @@ let len = s.len();  // Calls str::len() automatically
 
 Automatic conversion from `&T` to `&U` when `T: Deref<Target = U>`:
 
-```cpp
+```rust
+
 // String implements Deref<Target = str>
 fn takes_str(s: &str) { }
 
@@ -39,7 +44,9 @@ This one is pretty cool and explained a question I had early on, that I assume a
 In reality, ```&String``` becomes ```&String.as_str()``` which internally returns a reference to the underlying byte vector -> ```&string_owned_data[..]```.
 
 ### Multiple Levels
-```cpp
+
+```rust
+
 let s = String::from("hello");
 let r1 = &s;      // &String  
 let r2 = &r1;     // &&String
@@ -49,7 +56,9 @@ takes_str(r2);    // &&String → &String → &str
 ## Deref vs DerefMut
 
 ### `Deref` - Immutable Access
-```cpp
+
+```rust
+
 use std::ops::Deref;
 
 impl Deref for Box<T> {
@@ -62,7 +71,9 @@ let len = boxed.len();  // &Box<String> → &String → &str
 ```
 
 ### `DerefMut` - Mutable Access
-```cpp
+
+```rust
+
 use std::ops::DerefMut;
 
 impl DerefMut for Box<T> {
@@ -84,7 +95,8 @@ This is another pretty cool idea, and was the first thing that lead to me learni
 
 ## Custom Implementation
 
-```cpp
+```rust
+
 struct MyString {
     data: String,
 }
