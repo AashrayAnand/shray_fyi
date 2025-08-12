@@ -107,7 +107,8 @@ impl Solution {
 
 ### **Violation 1: Mutable and Immutable Borrow Simultaneously**
 
-```cpp
+```rust
+
 for num in &mut nums {  // Mutable borrow of nums
     if *num <= 0 || *num > nums.len() as i32 {  // Immutable borrow of nums
         *num = 1;
@@ -127,7 +128,8 @@ error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 
 ### **Violation 2: Immutable and Mutable Borrow Simultaneously**
 
-```cpp
+```rust
+
 for num in &nums {  // Immutable borrow of nums
     let abs_num = num.abs();
     if let Some(num_entry) = nums.get_mut((abs_num - 1) as usize) {  // Mutable borrow
@@ -137,11 +139,13 @@ for num in &nums {  // Immutable borrow of nums
 ```
 
 **Error:**
-```
+```rust
+
 error: cannot borrow `nums` as mutable because it is also borrowed as immutable
 ```
 
 **Why This Happens:**
+
 - `&nums` creates an immutable borrow for the entire loop
 - `nums.get_mut()` tries to create a mutable borrow while immutable borrow is active
 
@@ -167,7 +171,8 @@ for (int i = 0; i < n; i++) {
 
 #### **Rust: Controlled Access**
 
-```cpp
+```rust
+
 // This would be unsafe in Rust:
 for num in &mut nums {
     if *num <= 0 || *num > nums.len() as i32 {  // Compile error
@@ -198,7 +203,8 @@ for (int i = 0; i < nums.size(); i++) {
 
 #### **Rust: Compile-Time Prevention**
 
-```cpp
+```rust
+
 let mut nums = vec![1, 2, 3, 4, 5];
 for num in &mut nums {
     if *num == 3 {
@@ -220,7 +226,8 @@ delete[] arr;  // Must remember to free
 
 #### **Rust: Automatic Management**
 
-```cpp
+```rust
+
 let nums = vec![1, 2, 3, 4, 5];
 // nums is automatically dropped when it goes out of scope
 // No possibility of use-after-free
@@ -228,7 +235,8 @@ let nums = vec![1, 2, 3, 4, 5];
 
 ## Fixed Rust Solution
 
-```cpp
+```rust
+
 impl Solution {
     pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
         // Get length before any borrows to avoid conflicts
@@ -270,7 +278,8 @@ impl Solution {
 
 ### **1. Pre-compute Values**
 
-```cpp
+```rust
+
 // Before: nums.len() called during mutable borrow
 for num in &mut nums {
     if *num > nums.len() as i32 {  // Error
@@ -287,7 +296,8 @@ for num in &mut nums {
 
 ### **2. Index-Based Iteration**
 
-```cpp
+```rust
+
 // Before: Immutable borrow conflicts with mutable access
 for num in &nums {
     nums.get_mut(...);  // Error
@@ -307,7 +317,7 @@ for i in 0..nums.len() {
 
 ### **C++ Performance**
 
-```c
+```cpp
 // Direct array access - fastest
 for (int i = 0; i < n; i++) {
     nums[i] = 1;  // Direct memory access
