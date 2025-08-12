@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  
+
+  <title>
+    
+    A little bit of Rust: Ownership and Borrowing in Rust
+    
+</title>
+
+  
+  <link rel="stylesheet" href="https://www.shray.fyi/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <nav class="breadcrumb">
+            <a href="https://www.shray.fyi/">&larr; Back to Blog</a>
+        </nav>
+        <h1 itemprop="headline">A little bit of Rust: Ownership and Borrowing in Rust</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>1 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-08-09
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Rust's type system provides two complementary safety mechanisms, <strong>Ownership</strong>, and <strong>Borrowing</strong>, which together provide memory and logical safety guarantees that are impossible to achieve at compile time in other languages.</p>
+<h3 id="ownership">Ownership</h3>
+<ul>
+<li>Prevents double-free, use-after-free, memory leaks</li>
+<li>Ensures each piece of memory has exactly one owner</li>
+<li>Guarantees proper cleanup when values go out of scope</li>
+</ul>
+<h3 id="borrowing">Borrowing</h3>
+<ul>
+<li>Prevents data races, undefined behavior, non-deterministic access</li>
+<li>Ensures controlled access to shared data</li>
+<li>Prevents iterator invalidation and other logical bugs</li>
+</ul>
+<h2 id="ownership-1">Ownership</h2>
+<h3 id="rust-s-ownership-rules">Rust's Ownership Rules</h3>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Each value has exactly one owner
+</span><span style="color:#b48ead;">let</span><span> s = String::from(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);  </span><span style="color:#65737e;">// s owns the string
+</span><span style="color:#b48ead;">let</span><span> t = s;                      </span><span style="color:#65737e;">// ownership moves to t
+</span><span style="color:#65737e;">// println!(&quot;{}&quot;, s);           // Error: s no longer owns the string
+</span></code></pre>
+<h3 id="c-equivalent-manual-memory-management">C++ Equivalent (Manual Memory Management)</h3>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">string</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">memory</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    std::string* s = </span><span style="color:#b48ead;">new </span><span>std::</span><span style="color:#bf616a;">string</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);  </span><span style="color:#65737e;">// Manual allocation
+</span><span>    std::string* t = s;                         </span><span style="color:#65737e;">// Both pointers point to same memory
+</span><span>    </span><span style="color:#b48ead;">delete</span><span> s;                                   </span><span style="color:#65737e;">// Memory freed
+</span><span>    </span><span style="color:#b48ead;">delete</span><span> t;                                   </span><span style="color:#65737e;">// Double-free! Undefined behavior
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// Or with smart pointers (better, but still possible to misuse)
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> s = std::</span><span style="color:#bf616a;">make_unique</span><span>&lt;std::string&gt;(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> t = std::</span><span style="color:#bf616a;">move</span><span>(s);  </span><span style="color:#65737e;">// s is now nullptr
+</span><span>    </span><span style="color:#65737e;">// std::cout &lt;&lt; *s;     // Runtime error: null pointer dereference
+</span><span>}
+</span></code></pre>
+<h3 id="benefits-of-rust-s-ownership">Benefits of Rust's Ownership</h3>
+<h4 id="1-no-double-free">1. <strong>No Double-Free</strong></h4>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// Rust: Impossible to double-free
+</span><span style="color:#b48ead;">let</span><span> s = String::from(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span style="color:#65737e;">// Only one owner can drop the string
+</span><span style="color:#65737e;">// Compiler prevents multiple owners
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Easy to double-free
+</span><span>std::string* s = </span><span style="color:#b48ead;">new </span><span>std::</span><span style="color:#bf616a;">string</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span>std::string* t = s;  </span><span style="color:#65737e;">// Two pointers to same memory
+</span><span style="color:#b48ead;">delete</span><span> s;            </span><span style="color:#65737e;">// Memory freed
+</span><span style="color:#b48ead;">delete</span><span> t;            </span><span style="color:#65737e;">// Double-free! Undefined behavior
+</span></code></pre>
+<h4 id="2-no-use-after-free">2. <strong>No Use-After-Free</strong></h4>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Rust: Impossible to use after free
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">create_string</span><span>() -&gt; String {
+</span><span>    String::from(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;)
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">let</span><span> s = </span><span style="color:#96b5b4;">create_string</span><span>();  </span><span style="color:#65737e;">// s owns the string
+</span><span style="color:#65737e;">// String is automatically dropped when s goes out of scope
+</span><span style="color:#65737e;">// No possibility of use-after-free
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Easy to use after free
+</span><span>std::string* </span><span style="color:#8fa1b3;">create_string</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">return new </span><span>std::</span><span style="color:#bf616a;">string</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span>}
+</span><span>
+</span><span>std::string* s = </span><span style="color:#bf616a;">create_string</span><span>();
+</span><span style="color:#b48ead;">delete</span><span> s;           </span><span style="color:#65737e;">// Memory freed
+</span><span>std::cout &lt;&lt; *s;    </span><span style="color:#65737e;">// Use-after-free! Undefined behavior
+</span></code></pre>
+<h4 id="3-automatic-memory-management">3. <strong>Automatic Memory Management</strong></h4>
+<p>Although Rust is not a garbage-collected language like Java, it is able to achieve automatic memory management without additional overhead, by relying on the lifetime of owned data to dictate when to release this data.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Rust: Automatic cleanup
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">process_data</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> data = vec![</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>, </span><span style="color:#d08770;">4</span><span>, </span><span style="color:#d08770;">5</span><span>];  </span><span style="color:#65737e;">// Allocated on stack
+</span><span>    </span><span style="color:#65737e;">// Process data...
+</span><span>    </span><span style="color:#65737e;">// Automatically dropped when function ends and data is out of scope.
+</span><span>}
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Manual cleanup required
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">process_data</span><span>() {
+</span><span>    std::vector&lt;</span><span style="color:#b48ead;">int</span><span>&gt;* data = </span><span style="color:#b48ead;">new </span><span>std::</span><span style="color:#bf616a;">vector</span><span>&lt;</span><span style="color:#b48ead;">int</span><span>&gt;{</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>, </span><span style="color:#d08770;">4</span><span>, </span><span style="color:#d08770;">5</span><span>};
+</span><span>    </span><span style="color:#65737e;">// Process data...
+</span><span>    </span><span style="color:#b48ead;">delete</span><span> data;  </span><span style="color:#65737e;">// Must remember to free
+</span><span>    </span><span style="color:#65737e;">// If we forget, memory leak!
+</span><span>}
+</span></code></pre>
+<h2 id="borrowing-1">Borrowing</h2>
+<h3 id="rust-s-borrowing-rules">Rust's Borrowing Rules</h3>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// You can have either:
+</span><span style="color:#65737e;">// - One mutable reference (&amp;mut T)
+</span><span style="color:#65737e;">// - Any number of immutable references (&amp;T)
+</span><span style="color:#65737e;">// - But never both simultaneously
+</span><span>
+</span><span style="color:#b48ead;">let mut</span><span> data = vec![</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>];
+</span><span style="color:#b48ead;">let</span><span> ref1 = &amp;</span><span style="color:#b48ead;">mut</span><span> data;  </span><span style="color:#65737e;">// Mutable reference
+</span><span style="color:#65737e;">// let ref2 = &amp;mut data;  // Error: cannot borrow as mutable more than once
+</span></code></pre>
+<h3 id="c-equivalent-no-borrow-checker">C++ Equivalent (No Borrow Checker)</h3>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: No compile-time borrowing rules
+</span><span>std::vector&lt;</span><span style="color:#b48ead;">int</span><span>&gt; data = {</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>};
+</span><span style="color:#b48ead;">int</span><span>* ref1 = &amp;data[</span><span style="color:#d08770;">0</span><span>];
+</span><span style="color:#b48ead;">int</span><span>* ref2 = &amp;data[</span><span style="color:#d08770;">0</span><span>];  </span><span style="color:#65737e;">// Multiple mutable references - allowed but dangerous
+</span><span>*ref1 = </span><span style="color:#d08770;">10</span><span>;
+</span><span>*ref2 = </span><span style="color:#d08770;">20</span><span>;  </span><span style="color:#65737e;">// Data race! Undefined behavior
+</span></code></pre>
+<h3 id="benefits-of-rust-s-borrowing">Benefits of Rust's Borrowing</h3>
+<h4 id="1-no-data-races">1. <strong>No Data Races</strong></h4>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Rust: Impossible to have data races in single thread
+</span><span style="color:#b48ead;">let mut</span><span> counter = </span><span style="color:#d08770;">0</span><span>;
+</span><span style="color:#b48ead;">let</span><span> ref1 = &amp;</span><span style="color:#b48ead;">mut</span><span> counter;
+</span><span style="color:#65737e;">// let ref2 = &amp;mut counter;  // Compile error
+</span><span>*ref1 += </span><span style="color:#d08770;">1</span><span>;  </span><span style="color:#65737e;">// Only one way to modify counter
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Easy to create data races
+</span><span style="color:#b48ead;">int</span><span> counter = </span><span style="color:#d08770;">0</span><span>;
+</span><span style="color:#b48ead;">int</span><span>* ref1 = &amp;counter;
+</span><span style="color:#b48ead;">int</span><span>* ref2 = &amp;counter;  </span><span style="color:#65737e;">// Multiple mutable references
+</span><span>*ref1 += </span><span style="color:#d08770;">1</span><span>;  </span><span style="color:#65737e;">// counter = 1
+</span><span>*ref2 += </span><span style="color:#d08770;">1</span><span>;  </span><span style="color:#65737e;">// counter = 2
+</span><span style="color:#65737e;">// But what if order changes? Undefined behavior!
+</span></code></pre>
+<h4 id="2-deterministic-behavior">2. <strong>Deterministic Behavior</strong></h4>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Rust: Predictable results
+</span><span style="color:#b48ead;">let mut</span><span> data = vec![</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>];
+</span><span style="color:#b48ead;">let</span><span> ref_data = &amp;</span><span style="color:#b48ead;">mut</span><span> data;
+</span><span>ref_data.</span><span style="color:#96b5b4;">push</span><span>(</span><span style="color:#d08770;">4</span><span>);  </span><span style="color:#65737e;">// data = [1, 2, 3, 4]
+</span><span>ref_data.</span><span style="color:#96b5b4;">push</span><span>(</span><span style="color:#d08770;">5</span><span>);  </span><span style="color:#65737e;">// data = [1, 2, 3, 4, 5]
+</span><span style="color:#65737e;">// Result is always deterministic
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Unpredictable results possible
+</span><span>std::vector&lt;</span><span style="color:#b48ead;">int</span><span>&gt; data = {</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>};
+</span><span style="color:#b48ead;">int</span><span>* ref1 = &amp;data[</span><span style="color:#d08770;">0</span><span>];
+</span><span style="color:#b48ead;">int</span><span>* ref2 = &amp;data[</span><span style="color:#d08770;">0</span><span>];
+</span><span style="color:#65737e;">// Multiple ways to modify same data
+</span><span style="color:#65737e;">// Result depends on order of operations
+</span></code></pre>
+<h4 id="3-iterator-safety">3. <strong>Iterator Safety</strong></h4>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>
+</span><span style="color:#65737e;">// Rust: Iterator invalidation prevented at compile time
+</span><span style="color:#b48ead;">let mut</span><span> vec = vec![</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>];
+</span><span style="color:#b48ead;">let</span><span> iter = vec.</span><span style="color:#96b5b4;">iter</span><span>();  </span><span style="color:#65737e;">// Immutable borrow
+</span><span style="color:#65737e;">// vec.push(4);         // Error: cannot borrow as mutable while borrowed as immutable
+</span></code></pre>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// C++: Iterator invalidation possible
+</span><span>std::vector&lt;</span><span style="color:#b48ead;">int</span><span>&gt; vec = {</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>};
+</span><span style="color:#b48ead;">auto</span><span> iter = vec.</span><span style="color:#bf616a;">begin</span><span>();
+</span><span>vec.</span><span style="color:#bf616a;">push_back</span><span>(</span><span style="color:#d08770;">4</span><span>);  </span><span style="color:#65737e;">// Iterator invalidated!
+</span><span style="color:#65737e;">// *iter;           // Undefined behavior
+</span></code></pre>
+<h2 id="concurrency-safety">Concurrency Safety</h2>
+<p>Rust handles concurrency gracefully, with a pattern called <strong>interior mutability</strong>. I will dedicate a full post to how this is achieved in the future.</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <nav class="post-navigation">
+                <a href="https://www.shray.fyi/" class="home-link">&larr; Back to Blog</a>
+            </nav>
+            <p>
+                
+                    Published by Aashray Anand
+                
+                
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://www.shray.fyi/js/codeblock.js"></script>
+  
+
+  
+
+  
+<script type="text/javascript" src="https://www.shray.fyi/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://www.shray.fyi/js/search.js"></script>
+
+
+  
+</body>
+
+</html>

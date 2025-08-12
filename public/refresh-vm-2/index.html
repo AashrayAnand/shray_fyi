@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  
+
+  <title>
+    
+    Using mprotect For Memory Protection
+    
+</title>
+
+  
+  <link rel="stylesheet" href="https://www.shray.fyi/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <nav class="breadcrumb">
+            <a href="https://www.shray.fyi/">&larr; Back to Blog</a>
+        </nav>
+        <h1 itemprop="headline">Using mprotect For Memory Protection</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>3 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-08-03
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>I recently took some notes when looking into the linux <code>mprotect</code> interface, which enables setting the protection on a region of <a href="https://linux.die.net/man/2/mprotect">memory</a>. In particular, this exercise was related to how <code>mprotect</code> interacts with memory-mapped shared memory segments.</p>
+<h2 id="understanding-proc-pid-maps">Understanding /proc/[pid]/maps</h2>
+<p>The <code>/proc/[pid]/maps</code> file provides a detailed view of a process's memory mappings. Here's an example:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>00400000-01b00000 r-xp 00000000 103:01 1705405  /path/to/executable
+</span><span>01d00000-01d01000 r--p 01700000 103:01 1705405  /path/to/executable
+</span><span>01d01000-01db0000 rw-p 01701000 103:01 1705405  /path/to/executable
+</span><span>2129c000-212bd000 rw-p 00000000 00:00 0         [heap]
+</span><span>7fd2934d5000-7fd293679000 r-xp 00000000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fd293679000-7fd293878000 ---p 001a4000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fd293878000-7fd29387c000 r--p 001a3000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fff33b67000-7fff33b88000 rw-p 00000000 00:00 0 [stack]
+</span><span>7fff33bae000-7fff33bb0000 r-xp 00000000 00:00 0 [vdso]
+</span><span>ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0 [vsyscall]
+</span></code></pre>
+<p>Each line contains:</p>
+<ol>
+<li>Address range (start-end)</li>
+<li>Permissions:
+<ul>
+<li>r: readable</li>
+<li>w: writable</li>
+<li>x: executable</li>
+<li>s: shared</li>
+<li>p: private (copy-on-write)</li>
+</ul>
+</li>
+<li>Offset into the file</li>
+<li>Device (major:minor)</li>
+<li>Inode number</li>
+<li>Pathname or [special] designation</li>
+</ol>
+<h2 id="shared-libraries-and-memory">Shared Libraries and Memory</h2>
+<p>Shared libraries are a prime example of memory sharing in Linux. Looking at the libc mapping from our example:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>7fd2934d5000-7fd293679000 r-xp 00000000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fd293679000-7fd293878000 ---p 001a4000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fd293878000-7fd29387c000 r--p 001a3000 103:01 3066  /usr/lib64/libc-2.26.so
+</span><span>7fd29387c000-7fd29387e000 rw-p 001a7000 103:01 3066  /usr/lib64/libc-2.26.so
+</span></code></pre>
+<p>Note the different sections:</p>
+<ul>
+<li>r-xp: Read and execute (code)</li>
+<li>r--p: Read-only data</li>
+<li>rw-p: Read-write data (private copy-on-write)</li>
+</ul>
+<h2 id="the-heap-and-its-growth">The Heap and its Growth</h2>
+<p>The heap segment is used for dynamic memory allocation. In our example:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2129c000-212bd000 rw-p 00000000 00:00 0         [heap]
+</span></code></pre>
+<p>This shows a heap of approximately 132 KB (212bd000 - 2129c000 = 135168 bytes).</p>
+<p>Important aspects of heap memory:</p>
+<ol>
+<li>It can grow dynamically using <code>brk()</code> or <code>sbrk()</code></li>
+<li>Large allocations might use <code>mmap()</code> instead</li>
+<li>Growth is not limited to the current size</li>
+<li>The heap can become fragmented over time</li>
+</ol>
+<h2 id="memory-protection-with-mprotect">Memory Protection with mprotect</h2>
+<p>The <code>mprotect</code> system call allows dynamic changing of memory protection. Here's a complete example:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">sys/mman.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">unistd.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">stdio.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">errno.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">string.h</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">protect_memory_region</span><span>(</span><span style="color:#b48ead;">void</span><span>* </span><span style="color:#bf616a;">addr</span><span>, size_t </span><span style="color:#bf616a;">len</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// Get page size and align address to page boundary
+</span><span>    size_t page_size = </span><span style="color:#bf616a;">getpagesize</span><span>();
+</span><span>    </span><span style="color:#b48ead;">void</span><span>* page_start = (</span><span style="color:#b48ead;">void</span><span>*)((uintptr_t)addr &amp; ~(page_size - </span><span style="color:#d08770;">1</span><span>));
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// Set protection to read-only
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">mprotect</span><span>(page_start, page_size, PROT_READ) != </span><span style="color:#d08770;">0</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">int</span><span> error = errno;
+</span><span>        </span><span style="color:#96b5b4;">printf</span><span>(&quot;</span><span style="color:#a3be8c;">mprotect failed: </span><span style="color:#d08770;">%s</span><span style="color:#96b5b4;">\n</span><span>&quot;, </span><span style="color:#96b5b4;">strerror</span><span>(error));
+</span><span>        </span><span style="color:#b48ead;">return</span><span>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style="color:#96b5b4;">printf</span><span>(&quot;</span><span style="color:#a3be8c;">Memory protection set to read-only</span><span style="color:#96b5b4;">\n</span><span>&quot;);
+</span><span>}
+</span></code></pre>
+<p>Protection remains in effect until:</p>
+<ol>
+<li>Another <code>mprotect</code> call changes it</li>
+<li>The memory is unmapped</li>
+<li>The process terminates</li>
+</ol>
+<h2 id="shared-memory-in-linux">Shared Memory in Linux</h2>
+<p>Linux provides several mechanisms for shared memory. Here's an example using POSIX shared memory:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">sys/mman.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">fcntl.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">unistd.h</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">void</span><span>* </span><span style="color:#8fa1b3;">create_shared_memory</span><span>(</span><span style="color:#b48ead;">const char</span><span>* </span><span style="color:#bf616a;">name</span><span>, size_t </span><span style="color:#bf616a;">size</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// Create shared memory object
+</span><span>    </span><span style="color:#b48ead;">int</span><span> fd = </span><span style="color:#bf616a;">shm_open</span><span>(name, O_CREAT | O_RDWR, </span><span style="color:#d08770;">0666</span><span>);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(fd == -</span><span style="color:#d08770;">1</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">NULL</span><span>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// Set the size
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">ftruncate</span><span>(fd, size) == -</span><span style="color:#d08770;">1</span><span>) {
+</span><span>        </span><span style="color:#bf616a;">close</span><span>(fd);
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">NULL</span><span>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// Map it into memory
+</span><span>    </span><span style="color:#b48ead;">void</span><span>* ptr = </span><span style="color:#bf616a;">mmap</span><span>(</span><span style="color:#d08770;">NULL</span><span>, size, 
+</span><span>                     PROT_READ | PROT_WRITE,
+</span><span>                     MAP_SHARED, fd, </span><span style="color:#d08770;">0</span><span>);
+</span><span>    
+</span><span>    </span><span style="color:#bf616a;">close</span><span>(fd);
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(ptr == MAP_FAILED) ? </span><span style="color:#d08770;">NULL </span><span>: ptr;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void</span><span>* </span><span style="color:#8fa1b3;">access_shared_memory</span><span>(</span><span style="color:#b48ead;">const char</span><span>* </span><span style="color:#bf616a;">name</span><span>, size_t </span><span style="color:#bf616a;">size</span><span>) {
+</span><span>    </span><span style="color:#b48ead;">int</span><span> fd = </span><span style="color:#bf616a;">shm_open</span><span>(name, O_RDWR, </span><span style="color:#d08770;">0666</span><span>);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(fd == -</span><span style="color:#d08770;">1</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">NULL</span><span>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">void</span><span>* ptr = </span><span style="color:#bf616a;">mmap</span><span>(</span><span style="color:#d08770;">NULL</span><span>, size,
+</span><span>                     PROT_READ | PROT_WRITE,
+</span><span>                     MAP_SHARED, fd, </span><span style="color:#d08770;">0</span><span>);
+</span><span>    
+</span><span>    </span><span style="color:#bf616a;">close</span><span>(fd);
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(ptr == MAP_FAILED) ? </span><span style="color:#d08770;">NULL </span><span>: ptr;
+</span><span>}
+</span></code></pre>
+<h2 id="how-is-mprotect-enforced-for-a-shared-memory-segment">How is mprotect enforced for a shared memory segment?</h2>
+<p>In the prior example, we used <code>mprotect</code> to change the memory protection level for portions
+of a shared memory segment, which may be memory-mapped by other processes as well.</p>
+<p>We can refer to the key concepts I went over before in <a href="https://www.shray.fyi/refresh-vm-1/">Refreshing Virtual Memory Concepts</a> to understand how applying controls on a shared memory segment would affect the underlying processes. Although multiple processes may memory map the same shared memory segment, they each have a distinct virtual memory area that corresponds to this memory mappings, which are controlled independently of one another.</p>
+<p>Therefore, although we may <code>mprotect</code> a virtual address that correlates to shared memory, we will only end up enforcing the protection level on ourself, rather than other processes accessing the same shared memory.</p>
+<h2 id="memory-ordering-and-mprotect">Memory Ordering and mprotect</h2>
+<p><code>mprotect</code> acts as a memory barrier, ensuring strict ordering of memory operations:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#65737e;">// Example demonstrating memory ordering with mprotect
+</span><span style="color:#b48ead;">char</span><span>* area = </span><span style="color:#bf616a;">mmap</span><span>(</span><span style="color:#d08770;">NULL</span><span>, </span><span style="color:#d08770;">4096</span><span>, 
+</span><span>                  PROT_READ | PROT_WRITE,
+</span><span>                  MAP_PRIVATE | MAP_ANONYMOUS, -</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">0</span><span>);
+</span><span>
+</span><span style="color:#65737e;">// Write to area
+</span><span style="color:#bf616a;">strcpy</span><span>(area, &quot;</span><span style="color:#a3be8c;">Hello</span><span>&quot;);
+</span><span>
+</span><span style="color:#65737e;">// Make read-only - all previous writes are guaranteed to complete
+</span><span style="color:#bf616a;">mprotect</span><span>(area, </span><span style="color:#d08770;">4096</span><span>, PROT_READ);
+</span><span>
+</span><span style="color:#65737e;">// Make writable again
+</span><span style="color:#bf616a;">mprotect</span><span>(area, </span><span style="color:#d08770;">4096</span><span>, PROT_READ | PROT_WRITE);
+</span><span>
+</span><span style="color:#65737e;">// This write cannot be reordered before the previous mprotect
+</span><span>area[</span><span style="color:#d08770;">0</span><span>] = &#39;</span><span style="color:#a3be8c;">X</span><span>&#39;;
+</span></code></pre>
+<p>The kernel ensures:</p>
+<ol>
+<li>All memory accesses complete before protection changes</li>
+<li>Protection changes are fully visible before subsequent accesses</li>
+<li>TLB flushes act as memory barriers</li>
+<li>Memory operations cannot be speculated across protection changes</li>
+</ol>
+<p>These are some virtual memory basics, I will probably supplement this in the future with more writeups about some of the following:</p>
+<ul>
+<li>Page tables and address translation</li>
+<li>Memory allocator internals</li>
+<li>NUMA memory management</li>
+<li>Transparent huge pages</li>
+<li>Memory policy and control groups</li>
+</ul>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <nav class="post-navigation">
+                <a href="https://www.shray.fyi/" class="home-link">&larr; Back to Blog</a>
+            </nav>
+            <p>
+                
+                    Published by Aashray Anand
+                
+                
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://www.shray.fyi/js/codeblock.js"></script>
+  
+
+  
+
+  
+<script type="text/javascript" src="https://www.shray.fyi/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://www.shray.fyi/js/search.js"></script>
+
+
+  
+</body>
+
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  
+
+  <title>
+    
+    Refreshing Virtual Memory Concepts
+    
+</title>
+
+  
+  <link rel="stylesheet" href="https://www.shray.fyi/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <nav class="breadcrumb">
+            <a href="https://www.shray.fyi/">&larr; Back to Blog</a>
+        </nav>
+        <h1 itemprop="headline">Refreshing Virtual Memory Concepts</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>6 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-07-25
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>I wanted to quickly write up some notes about virtual memory at a high level as I was looking into how the linux <code>mprotect</code> interface works, for modifying the memory access protection level for specific areas of a process's virtual memory.</p>
+<p>This originally came up when I was looking into the write-up <a href="https://stackoverflow.com/questions/18986264/mprotect-on-a-mmap-ed-shared-memory-segment">here</a>, which does a good job of explaining why <code>mprotect</code> will not affect shared-memory access for all processes that memory map a shared memory segment, and instead only will apply on the process which applies the <code>mprotect</code>.</p>
+<p>Ulrich Drepper's <a href="https://people.freebsd.org/~lstewart/articles/cpumemory.pdf">"What Every Programmer Should Know About Memory"</a> is a dense, but invaluable reference to deeply understand what I briefly describe here.</p>
+<h2 id="introduction-to-virtual-memory">Introduction to Virtual Memory</h2>
+<p>Virtual memory is a memory management technique that provides an abstraction of the storage resources available to a program. It maps memory addresses used by a program, called virtual addresses, into physical addresses in computer memory.</p>
+<p>Key benefits of virtual memory include:</p>
+<ul>
+<li>Process isolation</li>
+<li>Efficient memory utilization</li>
+<li>Ability to use more memory than physically available through paging</li>
+<li>Memory protection between processes</li>
+<li>Simplified memory allocation</li>
+</ul>
+<h2 id="virtual-memory-mapping-in-linux">Virtual Memory Mapping in Linux</h2>
+<p>Linux uses several key structures to manage virtual memory areas. The most important ones are <code>vm_area_struct</code> and <code>mm_struct</code>.</p>
+<h3 id="the-vm-area-struct">The vm_area_struct</h3>
+<p>This structure represents a contiguous range of virtual memory:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">struct </span><span>vm_area_struct {
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>mm_struct *vm_mm;    </span><span style="color:#65737e;">/* Associated mm_struct */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> vm_start;     </span><span style="color:#65737e;">/* Start address */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> vm_end;       </span><span style="color:#65737e;">/* End address */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> vm_flags;     </span><span style="color:#65737e;">/* Flags */
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>file *vm_file;       </span><span style="color:#65737e;">/* Associated file (if any) */
+</span><span>    </span><span style="color:#b48ead;">void </span><span>*vm_private_data;      </span><span style="color:#65737e;">/* Private data */
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>vm_operations_struct *vm_ops;
+</span><span>    </span><span style="color:#65737e;">/* ... other fields ... */
+</span><span>};
+</span></code></pre>
+<h3 id="the-mm-struct">The mm_struct</h3>
+<p>This structure represents the entire memory management context for a process:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">struct </span><span>mm_struct {
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>vm_area_struct *mmap;        </span><span style="color:#65737e;">/* list of memory areas */
+</span><span>    </span><span style="color:#b48ead;">struct</span><span> rb_root mm_rb;               </span><span style="color:#65737e;">/* red-black tree of VMAs */
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>vm_area_struct *mmap_cache;  </span><span style="color:#65737e;">/* last used memory area */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> free_area_cache;      </span><span style="color:#65737e;">/* 1st address space hole */
+</span><span>    pgd_t *pgd;                        </span><span style="color:#65737e;">/* page global directory */
+</span><span>    atomic_t mm_users;                 </span><span style="color:#65737e;">/* How many users? */
+</span><span>    atomic_t mm_count;                 </span><span style="color:#65737e;">/* How many references? */
+</span><span>    </span><span style="color:#b48ead;">int</span><span> map_count;                     </span><span style="color:#65737e;">/* number of VMAs */
+</span><span>    </span><span style="color:#b48ead;">struct</span><span> rw_semaphore mmap_sem;      </span><span style="color:#65737e;">/* mmap semaphore */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> start_code;          </span><span style="color:#65737e;">/* start address of code */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> end_code;            </span><span style="color:#65737e;">/* final address of code */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> start_data;          </span><span style="color:#65737e;">/* start address of data */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> end_data;            </span><span style="color:#65737e;">/* final address of data */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> start_brk;           </span><span style="color:#65737e;">/* start address of heap */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> brk;                 </span><span style="color:#65737e;">/* final address of heap */
+</span><span>    </span><span style="color:#b48ead;">unsigned long</span><span> start_stack;         </span><span style="color:#65737e;">/* start address of stack */
+</span><span>    </span><span style="color:#65737e;">/* ... many other fields ... */
+</span><span>};
+</span></code></pre>
+<h2 id="tlb-cache">TLB Cache</h2>
+<p>The Translation Lookaside Buffer (TLB) is essentially a small, fast cache that stores recently used virtual-to-physical address translations. Modern processors often implement a multi-level TLB hierarchy with separate L1 TLBs for instructions and data.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>L1 TLB (Split)
+</span><span>Instruction TLB (iTLB)        Data TLB (dTLB)
+</span><span>+-------------------+        +-------------------+
+</span><span>|  Virtual  | Phys  |        |  Virtual  | Phys  |
+</span><span>| Page Addr | Frame |        | Page Addr | Frame |
+</span><span>+-----------------+-+        +-----------------+-+
+</span><span>| VPN1 | PPN1 | F |         | VPN1 | PPN1 | F |
+</span><span>| VPN2 | PPN2 | F |         | VPN2 | PPN2 | F |
+</span><span>| ...  | ...  | F |         | ...  | ...  | F |
+</span><span>+-------------------+        +-------------------+
+</span><span>        |                            |
+</span><span>        v                            v
+</span><span>        Unified L2 TLB (Larger, slower)
+</span><span>        +--------------------------------+
+</span><span>        |  Virtual  | Physical  |        |
+</span><span>        | Page Addr |  Frame    | Flags  |
+</span><span>        +--------------------------------+
+</span><span>        | VPN1 | PPN1 | ASID | R/W/X/G  |
+</span><span>        | VPN2 | PPN2 | ASID | R/W/X/G  |
+</span><span>        | ...  | ...  | ...  | ...      |
+</span><span>        +--------------------------------+
+</span><span>
+</span><span>TLB Entry Detail:
+</span><span>+------------+------------+------+-----+-----+-----+-----+
+</span><span>| Virtual PN | Physical  | ASID | R  | W  | X  | G  |
+</span><span>|           | Frame Num  |      |    |    |    |    |
+</span><span>+------------+------------+------+-----+-----+-----+-----+
+</span><span>    20-40        40         16    1    1    1    1   bits
+</span><span>
+</span><span>Flags:
+</span><span>R: Readable
+</span><span>W: Writable
+</span><span>X: Executable
+</span><span>G: Global page
+</span><span>ASID: Address Space ID (process identifier)
+</span></code></pre>
+<p>The TLB is fully associative, meaning any virtual page number can map to any TLB entry. When a virtual address is accessed:</p>
+<ol>
+<li>The virtual page number is extracted</li>
+<li>All TLB entries are checked in parallel</li>
+<li>If found (TLB hit), the physical frame is used</li>
+<li>If not found (TLB miss), the page table is walked</li>
+</ol>
+<p>Note: Actual TLB sizes and structure vary by processor. For example:</p>
+<ul>
+<li>A typical L1 dTLB might have 64 entries</li>
+<li>L1 iTLB might have 128 entries</li>
+<li>L2 TLB might have 1024-1536 entries</li>
+</ul>
+<h2 id="page-tables">Page Tables</h2>
+<p>The page table is a hierarchical data structure that maps virtual addresses to physical addresses. On modern x86_64 systems, this typically involves a 4-level page table, where each level is an array of 512 entries (2⁹ entries, since each level uses 9 bits as an index).</p>
+<p>Each level's entries contain either:</p>
+<ul>
+<li>A physical address pointing to the next level's table (for PGD, PUD, PMD)</li>
+<li>The actual physical page address and metadata (for PTE level)</li>
+</ul>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Virtual Address (48 bits)
+</span><span>+--------+--------+--------+--------+------------+
+</span><span>|   PGD  |  PUD  |  PMD  |  PTE  |   Offset   |
+</span><span>|  9bits | 9bits | 9bits | 9bits |   12bits   |
+</span><span>+--------+--------+--------+--------+------------+
+</span><span>    |        |        |        |         |
+</span><span>    v        v        v        v         v
+</span><span>+------+  +------+  +------+  +------+  
+</span><span>| PGD  |-&gt;| PUD  |-&gt;| PMD  |-&gt;| PTE  |-&gt; Physical Page + Offset
+</span><span>+------+  +------+  +------+  +------+  
+</span><span>CR3      
+</span><span>
+</span><span>Each table is an array of 512 entries:
+</span><span>PGD[0..511] -&gt; each entry points to a PUD
+</span><span>PUD[0..511] -&gt; each entry points to a PMD
+</span><span>PMD[0..511] -&gt; each entry points to a PTE
+</span><span>PTE[0..511] -&gt; each entry points to a physical page
+</span><span>
+</span><span>Example entry (x86_64):
+</span><span>+--------------------------------+----+
+</span><span>|     Physical Page Address      |Flags|
+</span><span>|          40 bits              |12bit|
+</span><span>+--------------------------------+----+
+</span></code></pre>
+<p>During address translation, each 9-bit segment of the virtual address is used as an index into its corresponding table. For example:</p>
+<ul>
+<li>Bits 39-47 index into the PGD array</li>
+<li>Bits 30-38 index into the PUD array</li>
+<li>Bits 21-29 index into the PMD array</li>
+<li>Bits 12-20 index into the PTE array</li>
+<li>Bits 0-11 provide the offset into the final physical page</li>
+</ul>
+<p>This hierarchical structure allows for efficient memory usage, as tables for unused portions of the address space don't need to be allocated.</p>
+<h2 id="virtual-memory-address-translation">Virtual Memory Address Translation</h2>
+<p>The process of translating addresses in a process's virtual memory address space, to the corresponding physical memory address is roughly as follows:</p>
+<ol>
+<li>CPU checks if the virtual address has a TLB cache entry.</li>
+<li>CPU checks if the virtual address has a page table entry.</li>
+<li>If the TLB cache and page table did not have entries for the virtual address, invoke the <code>page_fault_handler</code>, to consult the process's virtual address space information further on how to address the access, looking up the corresponding virutal memory area for the address:
+<ul>
+<li>If the address's physical page is "swapped out" (written to disk), allocate a page in physical memory, read in the page, and update the page table.</li>
+<li>If the address does not correspond to any virtual memory area, a segmentation fault occurs.</li>
+</ul>
+</li>
+<li>Check whether the caller's access type matches the permissions for the page, otherwise a fault is generated.</li>
+<li>Update the TLB to include a new cache entry for the virtual address.</li>
+</ol>
+<h2 id="key-points-about-virtual-memory">Key Points About Virtual Memory</h2>
+<ol>
+<li>A process's physical address space does not have a consistent, physical memory ordering. Instead, processes have a virtual address space, which maps to their correspondingly allocated physical memory.</li>
+<li>Within a process's virtual address space, there are different, distinct virtual memory areas (VMAs). These include separate VMAs for code, data, heap, stack, and other segments of the address space.</li>
+<li>Different virtual memory areas can be backed by different storage types:
+<ul>
+<li>File-backed pages: For example, memory-mapped areas corresponding to shared libraries or memory-mapped files.</li>
+<li>Anonymous pages: Used for private data like the heap or stack, initially not associated with any file.</li>
+</ul>
+</li>
+<li>Within virtual memory areas, data is not guaranteed to be physically contiguous, or even all physically present. For instance, a virtual memory area could be entirely swapped to disk, except for a single page which is currently in memory.</li>
+<li>In many cases, particularly for file-backed VM areas, virtual addresses map contiguously to the backing storage from an initial offset. However, this isn't always true, as non-linear mappings are also possible.</li>
+</ol>
+<h2 id="virtual-memory-optimizations">Virtual Memory Optimizations</h2>
+<p>The following are general optimizations employed by virtual memory that I may dig into the details of in the future:</p>
+<ol>
+<li>The kernel page cache acts as an intermediate layer between file-backed pages and physical memory, improving I/O performance by caching frequently accessed file data.</li>
+<li>Copy-on-Write (CoW) mechanisms allow multiple processes to share the same physical pages until one process needs to modify the data, optimizing memory usage for fork() operations.</li>
+<li>Demand paging ensures that physical memory is allocated only when a page is actually accessed, not when it's initially mapped, improving memory efficiency.</li>
+<li>The kernel can reclaim memory from processes by swapping out less frequently used pages, allowing for overcommitment of memory resources.</li>
+<li>Memory protection is enforced at the page level, allowing fine-grained control over read, write, and execute permissions for different parts of a process's address space.</li>
+<li>Huge pages allow the kernel to use larger page sizes (e.g., 2MB or 1GB instead of 4KB), reducing TLB pressure by requiring fewer entries to map the same amount of memory. This is particularly beneficial for applications with large working sets, like databases or JVM-based applications.</li>
+</ol>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <nav class="post-navigation">
+                <a href="https://www.shray.fyi/" class="home-link">&larr; Back to Blog</a>
+            </nav>
+            <p>
+                
+                    Published by Aashray Anand
+                
+                
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://www.shray.fyi/js/codeblock.js"></script>
+  
+
+  
+
+  
+<script type="text/javascript" src="https://www.shray.fyi/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://www.shray.fyi/js/search.js"></script>
+
+
+  
+</body>
+
+</html>
