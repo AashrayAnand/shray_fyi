@@ -1,10 +1,7 @@
 +++
 title = "Refreshing Virtual Memory Concepts"
-description = "A comprehensive overview of virtual memory concepts, including TLB cache structure and Linux memory management data structures"
 date = 2025-07-25
 +++
-
-# Refreshing Virtual Memory Concepts
 
 I wanted to quickly write up some notes about virtual memory at a high level as I was looking into how the linux ```mprotect``` interface works, for modifying the memory access protection level for specific areas of a process's virtual memory.
 

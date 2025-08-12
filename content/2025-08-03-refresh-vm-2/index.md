@@ -1,10 +1,7 @@
 +++
 title = "Using mprotect For Memory Protection"
-description = "Deep dive into the Linux mprotect system call, including /proc/[pid]/maps analysis and shared memory management"
 date = 2025-08-03
 +++
-
-# Using `mprotect` For Memory Protection
 
 I recently took some notes when looking into the linux `mprotect` interface, which enables setting the protection on a region of [memory](https://linux.die.net/man/2/mprotect). In particular, this exercise was related to how ```mprotect``` interacts with memory-mapped shared memory segments.
 
