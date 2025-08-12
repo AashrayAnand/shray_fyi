@@ -307,7 +307,7 @@ for i in 0..nums.len() {
 
 ### **C++ Performance**
 
-```cpp
+```c
 // Direct array access - fastest
 for (int i = 0; i < n; i++) {
     nums[i] = 1;  // Direct memory access
@@ -316,7 +316,8 @@ for (int i = 0; i < n; i++) {
 
 ### **Rust Performance**
 
-```cpp
+```rust
+
 // Zero-cost abstractions - same performance
 for num in &mut nums {
     *num = 1;  // Same assembly as C++
@@ -327,12 +328,13 @@ for num in &mut nums {
 
 ### **1. Pre-compute Values**
 
-```cpp
+```rust
+
 let len = nums.len() as i32;  // Avoid borrow conflicts
 ```
 
 ### **2. Index-Based Iteration**
-```cpp
+```rust
 
 for i in 0..nums.len() {  // When you need to modify while iterating
     // Safe to modify nums[i]
@@ -341,7 +343,8 @@ for i in 0..nums.len() {  // When you need to modify while iterating
 
 ### **3. Use `iter_mut()` for Simple Cases**
 
-```cpp
+```rust
+
 for num in &mut nums {  // When you only need to modify elements
     *num = 1;
 }
@@ -349,7 +352,8 @@ for num in &mut nums {  // When you only need to modify elements
 
 ### **4. Use `enumerate()` for Index + Value**
 
-```cpp
+```rust
+
 for (i, num) in nums.iter_mut().enumerate() {
     if *num == 1 {
         // i is the index, num is the value
