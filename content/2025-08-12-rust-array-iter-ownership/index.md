@@ -72,7 +72,7 @@ public:
 
 ## Rust Solution: Borrow Checker Violations (Original)
 
-```rust
+```cpp
 
 impl Solution {
     pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
@@ -108,7 +108,7 @@ impl Solution {
 
 ### **Violation 1: Mutable and Immutable Borrow Simultaneously**
 
-```rust
+```cpp
 
 for num in &mut nums {  // Mutable borrow of nums
     if *num <= 0 || *num > nums.len() as i32 {  // Immutable borrow of nums
@@ -128,7 +128,7 @@ error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 
 ### **Violation 2: Immutable and Mutable Borrow Simultaneously**
 
-```rust
+```cpp
 
 for num in &nums {  // Immutable borrow of nums
     let abs_num = num.abs();
@@ -167,7 +167,7 @@ for (int i = 0; i < n; i++) {
 - Potential for undefined behavior
 
 #### **Rust: Controlled Access**
-```rust
+```cpp
 
 // This would be unsafe in Rust:
 for num in &mut nums {
@@ -197,7 +197,7 @@ for (int i = 0; i < nums.size(); i++) {
 ```
 
 #### **Rust: Compile-Time Prevention**
-```rust
+```cpp
 let mut nums = vec![1, 2, 3, 4, 5];
 for num in &mut nums {
     if *num == 3 {
@@ -217,7 +217,7 @@ delete[] arr;  // Must remember to free
 ```
 
 #### **Rust: Automatic Management**
-```rust
+```cpp
 let nums = vec![1, 2, 3, 4, 5];
 // nums is automatically dropped when it goes out of scope
 // No possibility of use-after-free
@@ -225,7 +225,7 @@ let nums = vec![1, 2, 3, 4, 5];
 
 ## Fixed Rust Solution
 
-```rust
+```cpp
 impl Solution {
     pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
         // Get length before any borrows to avoid conflicts
@@ -266,7 +266,7 @@ impl Solution {
 ## Key Differences in the Fixed Solution
 
 ### **1. Pre-compute Values**
-```rust
+```cpp
 
 // Before: nums.len() called during mutable borrow
 for num in &mut nums {
@@ -283,7 +283,7 @@ for num in &mut nums {
 ```
 
 ### **2. Index-Based Iteration**
-```rust
+```cpp
 
 // Before: Immutable borrow conflicts with mutable access
 for num in &nums {
@@ -311,7 +311,7 @@ for (int i = 0; i < n; i++) {
 ```
 
 ### **Rust Performance**
-```rust
+```cpp
 // Zero-cost abstractions - same performance
 for num in &mut nums {
     *num = 1;  // Same assembly as C++
@@ -321,13 +321,13 @@ for num in &mut nums {
 ## Common Rust Patterns for This Problem
 
 ### **1. Pre-compute Values**
-```rust
+```cpp
 
 let len = nums.len() as i32;  // Avoid borrow conflicts
 ```
 
 ### **2. Index-Based Iteration**
-```rust
+```cpp
 
 for i in 0..nums.len() {  // When you need to modify while iterating
     // Safe to modify nums[i]
@@ -335,7 +335,7 @@ for i in 0..nums.len() {  // When you need to modify while iterating
 ```
 
 ### **3. Use `iter_mut()` for Simple Cases**
-```rust
+```cpp
 
 for num in &mut nums {  // When you only need to modify elements
     *num = 1;
@@ -343,7 +343,7 @@ for num in &mut nums {  // When you only need to modify elements
 ```
 
 ### **4. Use `enumerate()` for Index + Value**
-```rust
+```cpp
 
 for (i, num) in nums.iter_mut().enumerate() {
     if *num == 1 {

@@ -12,7 +12,7 @@ It's important to call out that NLL only applies for references, not for owned v
 **Before NLL**: Borrows lasted until the end of their lexical scope
 **With NLL**: Borrows end at their last use
 
-```rust
+```cpp
 let mut vec = vec![1, 2, 3];
 let r = &vec[0];        // Borrow starts
 println!("{}", r);      // Last use of r
@@ -28,7 +28,7 @@ vec.push(4);           // ✅ Borrow ends here (NLL), mutation allowed
 
 This contrasts with the obvious case below, where the NLL of the immutable reference to vec now goes beyond the mutable access and will error.
 
-```rust
+```cpp
 let mut vec = vec![1, 2, 3];
 let r = &vec[0];        // Borrow starts
 vec.push(4);           // ❌ Error: borrow NLL is still beyond this scope.

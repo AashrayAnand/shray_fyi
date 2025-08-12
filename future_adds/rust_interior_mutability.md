@@ -32,7 +32,7 @@ Let's examine how Rust's interior mutability differs from C++ approaches.
 
 ### Rust Implementation
 
-```rust
+```cpp
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -132,7 +132,7 @@ int main() {
 ### 1. **Type-Level Safety vs Runtime Safety**
 
 **Rust:**
-```rust
+```cpp
 // The Mutex is part of the type - impossible to forget to lock
 Arc<Mutex<HashMap<String, String>>>
 //     ↑
@@ -155,7 +155,7 @@ void set(...) {
 ### 2. **Compile-Time Guarantees**
 
 **Rust:**
-```rust
+```cpp
 // Compile-time enforcement of thread safety
 let kvs = Arc::new(KeyValueStore::new());
 let ref1 = &kvs;  // Immutable reference
@@ -173,7 +173,7 @@ auto kvs = std::make_shared<KeyValueStore>();
 ### 3. **Automatic Resource Management**
 
 **Rust:**
-```rust
+```cpp
 pub fn set(&self, key: String, value: String) {
     if let Ok(mut map) = self.data.lock() {
         map.insert(key, value);
@@ -197,7 +197,7 @@ void set(const std::string& key, const std::string& value) {
 
 ### The Magic of `DerefMut`
 
-```rust
+```cpp
 pub fn set(&self, key: String, value: String) {
     if let Ok(mut map) = self.data.lock() {  // ← Returns MutexGuard<HashMap>
         map.insert(key, value);               // ← Automatically dereferences to &mut HashMap
@@ -213,7 +213,7 @@ pub fn set(&self, key: String, value: String) {
 
 ### Why This is Safe
 
-```rust
+```cpp
 // Multiple threads can have immutable references
 let kvs = Arc::new(KeyValueStore::new());
 let kvs1 = Arc::clone(&kvs);  // &KeyValueStore
@@ -228,7 +228,7 @@ kvs2.set("key2".to_string(), "value2".to_string());  // Waits, then locks, mutat
 
 ### `RefCell<T>` - Single-Threaded Interior Mutability
 
-```rust
+```cpp
 use std::cell::RefCell;
 
 struct Counter {
@@ -253,7 +253,7 @@ impl Counter {
 
 ### `RwLock<T>` - Multiple Readers, Single Writer
 
-```rust
+```cpp
 use std::sync::RwLock;
 
 struct SharedData {

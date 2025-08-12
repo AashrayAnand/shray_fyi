@@ -21,7 +21,7 @@ and enforcing thread-safe namespace access across connections.
 
 A singleton would look like the following to start: 
 
-```rust
+```cpp
 static INSTANCE: LazyLock<Arc<RwLock<KeyValueStore>>> = 
     LazyLock::new(|| Arc::new(RwLock::new(KeyValueStore::new())));
 
@@ -34,7 +34,7 @@ pub fn instance() -> Arc<RwLock<KeyValueStore>> {
 
 To enforce only-once initialization of a singleton, the ```Once``` primitive can be used.
 
-```rust
+```cpp
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -55,13 +55,13 @@ pub fn get_instance() -> Arc<KeyValueStore> {
 A combination of the above 2 steps can be implemented using a `LazyLock` with synchronized access.
 
 ### 1. LazyLock - Thread-Safe Lazy Initialization
-```rust
+```cpp
 static GLOBAL_STORES: LazyLock<T> = LazyLock::new(|| expensive_initialization());
 ```
 
 In the case of ```GLOBAL_STORES```, this will delay the initialization of the registry hash to the first access, make initialization thread-safe, and results in a fixed-size compile-time global state of a ```LazyLock```.
 
-```rust
+```cpp
 use std::sync::{LazyLock, RwLock};
 use std::collections::HashMap;
 
@@ -70,7 +70,7 @@ static GLOBAL_STORES: LazyLock<RwLock<HashMap<String, Arc<KeyValueStore>>>> =
 ```
 
 ### 2. RwLock - Reader-Writer Synchronization
-```rust
+```cpp
 let stores = GLOBAL_STORES.write().unwrap();  // Exclusive access for modifications
 let stores = GLOBAL_STORES.read().unwrap();   // Shared access for reads
 ```
@@ -78,7 +78,7 @@ let stores = GLOBAL_STORES.read().unwrap();   // Shared access for reads
 After the registry is initialized, we can enforce thread-safe registry access.
 
 ### 3. HashMap with or_insert_with - Conditional Initialization
-```rust
+```cpp
 stores.entry(name.clone())
     .or_insert_with(|| Arc::new(KeyValueStore::new(name)))
     .clone()
@@ -88,7 +88,7 @@ Using a synchronized ```or_insert_with``` operation on the registry, we can acce
 
 ## The Complete Pattern
 
-```rust
+```cpp
 pub fn get_or_create(name: String) -> Arc<KeyValueStore> {
     let mut stores = GLOBAL_STORES.write().unwrap();
     stores.entry(name.clone())
@@ -106,7 +106,7 @@ We end up being able to get the following behavior:
 
 ### Execution Flow
 
-```rust
+```cpp
 // Thread 1: get_or_create("db1")
 GLOBAL_STORES.write() 🔒
 ├── HashMap is empty
@@ -132,7 +132,7 @@ GLOBAL_STORES.write() 🔒
 Even if `KeyValueStore::new()` is not thread-safe, the global lock ensures only one thread can execute it at a time.
 
 ### 2. **Resource Efficiency** 
-```rust
+```cpp
 let store1 = KeyValueStore::get_or_create("db1".to_string());
 let store2 = KeyValueStore::get_or_create("db1".to_string());
 // store1 and store2 point to the SAME instance
@@ -140,7 +140,7 @@ let store2 = KeyValueStore::get_or_create("db1".to_string());
 
 ### 3. **Named Instance Management**
 Multiple named singletons can coexist:
-```rust
+```cpp
 let user_db = KeyValueStore::get_or_create("users".to_string());
 let session_db = KeyValueStore::get_or_create("sessions".to_string());
 // Different instances for different purposes
