@@ -29,6 +29,7 @@ Together, these systems provide complete safety guarantees at compile time witho
 
 ### Rust's Ownership Rules
 ```rust
+
 // Each value has exactly one owner
 let s = String::from("hello");  // s owns the string
 let t = s;                      // ownership moves to t
@@ -57,6 +58,7 @@ int main() {
 
 #### 1. **No Double-Free**
 ```rust
+
 // Rust: Impossible to double-free
 let s = String::from("hello");
 // Only one owner can drop the string
@@ -73,6 +75,7 @@ delete t;            // Double-free! Undefined behavior
 
 #### 2. **No Use-After-Free**
 ```rust
+
 // Rust: Impossible to use after free
 fn create_string() -> String {
     String::from("hello")
@@ -96,6 +99,7 @@ std::cout << *s;    // Use-after-free! Undefined behavior
 
 #### 3. **Automatic Cleanup**
 ```rust
+
 // Rust: Automatic cleanup
 fn process_data() {
     let data = vec![1, 2, 3, 4, 5];  // Allocated on stack
@@ -118,6 +122,7 @@ void process_data() {
 
 ### Rust's Borrowing Rules
 ```rust
+
 // You can have either:
 // - One mutable reference (&mut T)
 // - Any number of immutable references (&T)
@@ -142,6 +147,7 @@ int* ref2 = &data[0];  // Multiple mutable references - allowed but dangerous
 
 #### 1. **No Data Races**
 ```rust
+
 // Rust: Impossible to have data races in single thread
 let mut counter = 0;
 let ref1 = &mut counter;
@@ -161,6 +167,7 @@ int* ref2 = &counter;  // Multiple mutable references
 
 #### 2. **Deterministic Behavior**
 ```rust
+
 // Rust: Predictable results
 let mut data = vec![1, 2, 3];
 let ref_data = &mut data;
@@ -180,6 +187,7 @@ int* ref2 = &data[0];
 
 #### 3. **Iterator Safety**
 ```rust
+
 // Rust: Iterator invalidation prevented at compile time
 let mut vec = vec![1, 2, 3];
 let iter = vec.iter();  // Immutable borrow
@@ -202,155 +210,13 @@ In concurrent programming, multiple threads can access the same data simultaneou
 - **Race conditions** - Order-dependent behavior
 - **Undefined behavior** - Unpredictable results
 
-### Rust's Solution: Interior Mutability
-
-#### Thread-Safe Shared State
-```rust
-use std::sync::{Arc, Mutex};
-use std::thread;
-
-fn main() {
-    // Memory Safety: Arc ensures proper cleanup
-    let shared_data = Arc::new(Mutex::new(vec![1, 2, 3]));
-    
-    // Logical Safety: Mutex ensures exclusive access
-    let thread1_data = Arc::clone(&shared_data);
-    let thread2_data = Arc::clone(&shared_data);
-    
-    let handle1 = thread::spawn(move || {
-        if let Ok(mut data) = thread1_data.lock() {
-            data.push(4);  // Only this thread can modify
-        }
-    });
-    
-    let handle2 = thread::spawn(move || {
-        if let Ok(mut data) = thread2_data.lock() {
-            data.push(5);  // Only this thread can modify (waits for lock)
-        }
-    });
-    
-    handle1.join().unwrap();
-    handle2.join().unwrap();
-    
-    // Result is deterministic and safe
-}
-```
-
-#### C++ Equivalent (Error-Prone)
-```cpp
-#include <vector>
-#include <thread>
-#include <mutex>
-#include <memory>
-
-int main() {
-    // Manual memory management
-    auto shared_data = std::make_shared<std::mutex>();
-    auto vec = std::make_shared<std::vector<int>>();
-    vec->push_back(1);
-    vec->push_back(2);
-    vec->push_back(3);
-    
-    auto thread1_data = shared_data;
-    auto thread2_data = shared_data;
-    auto vec1 = vec;
-    auto vec2 = vec;
-    
-    std::thread t1([thread1_data, vec1]() {
-        std::lock_guard<std::mutex> lock(*thread1_data);
-        vec1->push_back(4);
-    });
-    
-    std::thread t2([thread2_data, vec2]() {
-        std::lock_guard<std::mutex> lock(*thread2_data);
-        vec2->push_back(5);
-    });
-    
-    t1.join();
-    t2.join();
-    
-    // Easy to forget locks, create data races
-    // No compile-time guarantees
-}
-```
-
-### Interior Mutability Pattern
-
-#### How It Works
-```rust
-// Multiple threads can have immutable references
-let kvs = Arc::new(KeyValueStore::new());
-let kvs1 = Arc::clone(&kvs);  // &KeyValueStore (immutable)
-let kvs2 = Arc::clone(&kvs);  // &KeyValueStore (immutable)
-
-// But only one can access the HashMap at a time
-kvs1.set("key1".to_string(), "value1".to_string());  // Locks, mutates, unlocks
-kvs2.set("key2".to_string(), "value2".to_string());  // Waits, then locks, mutates, unlocks
-```
-
-#### Why This is Safe
-1. **`Arc`** provides shared ownership (memory safety)
-2. **`Mutex`** provides exclusive access (logical safety)
-3. **Combined** they provide thread-safe mutation through immutable references
-
-### Complete Thread-Safe Key-Value Store
-```rust
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-
-#[derive(Clone)]
-pub struct KeyValueStore {
-    data: Arc<Mutex<HashMap<String, String>>>
-}
-
-impl KeyValueStore {
-    pub fn new() -> Self {
-        Self { 
-            data: Arc::new(Mutex::new(HashMap::new())) 
-        }
-    }
-
-    // Note: &self, not &mut self!
-    pub fn set(&self, key: String, value: String) {
-        if let Ok(mut map) = self.data.lock() {
-            map.insert(key, value);  // Mutation through immutable reference
-        }
-    }
-
-    pub fn get(&self, key: &str) -> Option<String> {
-        if let Ok(map) = self.data.lock() {
-            map.get(key).cloned()
-        } else {
-            None
-        }
-    }
-}
-
-// Usage
-fn main() {
-    let kvs = Arc::new(KeyValueStore::new());
-    
-    // Multiple threads can have immutable references
-    let kvs1 = Arc::clone(&kvs);
-    let kvs2 = Arc::clone(&kvs);
-    
-    // Both threads can mutate the data safely
-    std::thread::spawn(move || {
-        kvs1.set("key1".to_string(), "value1".to_string());
-    });
-    
-    std::thread::spawn(move || {
-        kvs2.set("key2".to_string(), "value2".to_string());
-    });
-}
-```
-
-## Comparison with C++
+Rust handled concurrency via various approaches, including a pattern I will need to talk about eventually called **interior mutability**.
 
 ### Memory Safety
 
 #### Rust (Automatic)
 ```rust
+
 // Compile-time guarantees
 let s = String::from("hello");
 // No possibility of memory leaks, double-free, use-after-free
@@ -368,6 +234,7 @@ std::string* s = new std::string("hello");
 
 #### Rust (Compile-Time)
 ```rust
+
 // Compile-time prevention of data races
 let mut data = vec![1, 2, 3];
 let ref1 = &mut data;
@@ -387,6 +254,7 @@ int* ref2 = &data[0];  // Allowed but dangerous
 
 #### Rust (Type-Level)
 ```rust
+
 // Type system enforces thread safety
 let shared_data = Arc::new(Mutex::new(vec![1, 2, 3]));
 // Impossible to access without proper synchronization
@@ -427,29 +295,6 @@ std::mutex mtx;
 - Type system prevents data races
 - Interior mutability enables safe sharing
 - No runtime synchronization overhead
-
-## When to Use Each Pattern
-
-### **Ownership (`T`)**
-- When you need exclusive control
-- For simple data structures
-- When performance is critical
-- For single-threaded applications
-
-### **Shared Ownership (`Arc<T>`)**
-- When multiple parts need access
-- For thread-safe sharing
-- When you need reference counting
-
-### **Interior Mutability (`Arc<Mutex<T>>`)**
-- When you need thread-safe mutation
-- For shared state in concurrent applications
-- When you need controlled access to mutable data
-
-### **Borrowing (`&T`, `&mut T`)**
-- When you need temporary access
-- For function parameters
-- When you want to avoid copying
 
 ## Conclusion
 

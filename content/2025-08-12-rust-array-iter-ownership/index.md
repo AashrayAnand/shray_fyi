@@ -73,6 +73,7 @@ public:
 ## Rust Solution: Borrow Checker Violations (Original)
 
 ```rust
+
 impl Solution {
     pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
         // get rid of numbers we don't care for.
@@ -108,6 +109,7 @@ impl Solution {
 ### **Violation 1: Mutable and Immutable Borrow Simultaneously**
 
 ```rust
+
 for num in &mut nums {  // Mutable borrow of nums
     if *num <= 0 || *num > nums.len() as i32 {  // Immutable borrow of nums
         *num = 1;
@@ -127,6 +129,7 @@ error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 ### **Violation 2: Immutable and Mutable Borrow Simultaneously**
 
 ```rust
+
 for num in &nums {  // Immutable borrow of nums
     let abs_num = num.abs();
     if let Some(num_entry) = nums.get_mut((abs_num - 1) as usize) {  // Mutable borrow
@@ -165,6 +168,7 @@ for (int i = 0; i < n; i++) {
 
 #### **Rust: Controlled Access**
 ```rust
+
 // This would be unsafe in Rust:
 for num in &mut nums {
     if *num <= 0 || *num > nums.len() as i32 {  // Compile error
@@ -263,6 +267,7 @@ impl Solution {
 
 ### **1. Pre-compute Values**
 ```rust
+
 // Before: nums.len() called during mutable borrow
 for num in &mut nums {
     if *num > nums.len() as i32 {  // Error
@@ -279,6 +284,7 @@ for num in &mut nums {
 
 ### **2. Index-Based Iteration**
 ```rust
+
 // Before: Immutable borrow conflicts with mutable access
 for num in &nums {
     nums.get_mut(...);  // Error
@@ -292,25 +298,9 @@ for i in 0..nums.len() {
 }
 ```
 
-## Safety Benefits of Rust's Approach
-
-### **1. Compile-Time Safety**
-- **C++**: Runtime errors, undefined behavior
-- **Rust**: Compile-time errors, guaranteed safety
-
-### **2. Memory Safety**
-- **C++**: Manual memory management, potential leaks
-- **Rust**: Automatic memory management, no leaks
-
-### **3. Data Race Prevention**
-- **C++**: Manual synchronization required
-- **Rust**: Compile-time prevention of data races
-
-### **4. Iterator Safety**
-- **C++**: Runtime iterator invalidation possible
-- **Rust**: Compile-time prevention of iterator invalidation
-
 ## Performance Comparison
+
+**Rust provides the same performance as C++ with additional safety guarantees.**
 
 ### **C++ Performance**
 ```cpp
@@ -328,17 +318,17 @@ for num in &mut nums {
 }
 ```
 
-**Rust provides the same performance as C++ with additional safety guarantees.**
-
 ## Common Rust Patterns for This Problem
 
 ### **1. Pre-compute Values**
 ```rust
+
 let len = nums.len() as i32;  // Avoid borrow conflicts
 ```
 
 ### **2. Index-Based Iteration**
 ```rust
+
 for i in 0..nums.len() {  // When you need to modify while iterating
     // Safe to modify nums[i]
 }
@@ -346,6 +336,7 @@ for i in 0..nums.len() {  // When you need to modify while iterating
 
 ### **3. Use `iter_mut()` for Simple Cases**
 ```rust
+
 for num in &mut nums {  // When you only need to modify elements
     *num = 1;
 }
@@ -353,6 +344,7 @@ for num in &mut nums {  // When you only need to modify elements
 
 ### **4. Use `enumerate()` for Index + Value**
 ```rust
+
 for (i, num) in nums.iter_mut().enumerate() {
     if *num == 1 {
         // i is the index, num is the value
