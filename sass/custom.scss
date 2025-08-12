@@ -1,6 +1,11 @@
-/* Wider content layout */
-.container {
-  max-width: 100rem;
+/* Wider content layout for individual pages only */
+body:not(.home) .container {
+  max-width: 90rem;
+}
+
+/* Ensure proper spacing for article elements */
+article {
+  margin-bottom: 2rem;
 }
 
 /* Custom styles for backlinks */
