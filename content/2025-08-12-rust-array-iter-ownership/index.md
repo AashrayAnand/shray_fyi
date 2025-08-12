@@ -73,7 +73,6 @@ public:
 ## Rust Solution: Borrow Checker Violations (Original)
 
 ```cpp
-
 impl Solution {
     pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
         // get rid of numbers we don't care for.
@@ -109,7 +108,6 @@ impl Solution {
 ### **Violation 1: Mutable and Immutable Borrow Simultaneously**
 
 ```cpp
-
 for num in &mut nums {  // Mutable borrow of nums
     if *num <= 0 || *num > nums.len() as i32 {  // Immutable borrow of nums
         *num = 1;
@@ -118,6 +116,7 @@ for num in &mut nums {  // Mutable borrow of nums
 ```
 
 **Error:**
+
 ```
 error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 ```
@@ -129,7 +128,6 @@ error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 ### **Violation 2: Immutable and Mutable Borrow Simultaneously**
 
 ```cpp
-
 for num in &nums {  // Immutable borrow of nums
     let abs_num = num.abs();
     if let Some(num_entry) = nums.get_mut((abs_num - 1) as usize) {  // Mutable borrow
@@ -152,6 +150,7 @@ error: cannot borrow `nums` as mutable because it is also borrowed as immutable
 ### **1. Simultaneous Access Patterns**
 
 #### **C++: Unrestricted Access**
+
 ```cpp
 for (int i = 0; i < n; i++) {
     if (nums[i] <= 0 || nums[i] > n) {  // Read access
@@ -167,8 +166,8 @@ for (int i = 0; i < n; i++) {
 - Potential for undefined behavior
 
 #### **Rust: Controlled Access**
-```cpp
 
+```cpp
 // This would be unsafe in Rust:
 for num in &mut nums {
     if *num <= 0 || *num > nums.len() as i32 {  // Compile error
@@ -186,6 +185,7 @@ for num in &mut nums {
 ### **2. Iterator Invalidation**
 
 #### **C++: Runtime Errors Possible**
+
 ```cpp
 vector<int> nums = {1, 2, 3, 4, 5};
 for (int i = 0; i < nums.size(); i++) {
@@ -197,6 +197,7 @@ for (int i = 0; i < nums.size(); i++) {
 ```
 
 #### **Rust: Compile-Time Prevention**
+
 ```cpp
 let mut nums = vec![1, 2, 3, 4, 5];
 for num in &mut nums {
@@ -209,6 +210,7 @@ for num in &mut nums {
 ### **3. Memory Safety**
 
 #### **C++: Manual Management**
+
 ```cpp
 int* arr = new int[10];
 // ... use array ...
@@ -217,6 +219,7 @@ delete[] arr;  // Must remember to free
 ```
 
 #### **Rust: Automatic Management**
+
 ```cpp
 let nums = vec![1, 2, 3, 4, 5];
 // nums is automatically dropped when it goes out of scope
@@ -266,8 +269,8 @@ impl Solution {
 ## Key Differences in the Fixed Solution
 
 ### **1. Pre-compute Values**
-```cpp
 
+```cpp
 // Before: nums.len() called during mutable borrow
 for num in &mut nums {
     if *num > nums.len() as i32 {  // Error
@@ -283,8 +286,8 @@ for num in &mut nums {
 ```
 
 ### **2. Index-Based Iteration**
-```cpp
 
+```cpp
 // Before: Immutable borrow conflicts with mutable access
 for num in &nums {
     nums.get_mut(...);  // Error
@@ -303,6 +306,7 @@ for i in 0..nums.len() {
 **Rust provides the same performance as C++ with additional safety guarantees.**
 
 ### **C++ Performance**
+
 ```cpp
 // Direct array access - fastest
 for (int i = 0; i < n; i++) {
@@ -311,6 +315,7 @@ for (int i = 0; i < n; i++) {
 ```
 
 ### **Rust Performance**
+
 ```cpp
 // Zero-cost abstractions - same performance
 for num in &mut nums {
@@ -321,8 +326,8 @@ for num in &mut nums {
 ## Common Rust Patterns for This Problem
 
 ### **1. Pre-compute Values**
-```cpp
 
+```cpp
 let len = nums.len() as i32;  // Avoid borrow conflicts
 ```
 
@@ -335,16 +340,16 @@ for i in 0..nums.len() {  // When you need to modify while iterating
 ```
 
 ### **3. Use `iter_mut()` for Simple Cases**
-```cpp
 
+```cpp
 for num in &mut nums {  // When you only need to modify elements
     *num = 1;
 }
 ```
 
 ### **4. Use `enumerate()` for Index + Value**
-```cpp
 
+```cpp
 for (i, num) in nums.iter_mut().enumerate() {
     if *num == 1 {
         // i is the index, num is the value
