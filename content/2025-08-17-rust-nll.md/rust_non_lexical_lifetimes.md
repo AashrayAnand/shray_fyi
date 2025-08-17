@@ -1,6 +1,6 @@
 +++
 title = "A little bit of Rust: Non-Lexical Lifetimes and Mutability"
-date = 2025-XX-XX
+date = 2025-08-17
 +++
 
 One way where Rust has become a bit "smarter" about how ownership and borrowing are checked is by applying "non-lexical lifetime". This basically means that rather than blindly enforcing the scope that a variable is created e.g. treating the lifetime of a function-local variable as the entire lifetime of that function, Rust will look at the underlying usage of these variables and enforce a tighter lifetime e.g. scoping the lifetime of a function-local variable as the time from its declaration to its last usage.
