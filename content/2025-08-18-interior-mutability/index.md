@@ -1,6 +1,6 @@
 +++
-title = "A little bit of Rust: Interior Mutability"
-date = 2025-XX-XX
+title = "Interior Mutability in Rust"
+date = 2025-08-18
 +++
 
 Interior mutability is a Rust pattern that allows you to mutate data even when you have an immutable reference to that data. This pattern is essential for safe concurrent programming and is one of Rust's most powerful features for achieving thread safety.

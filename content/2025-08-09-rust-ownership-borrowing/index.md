@@ -1,5 +1,5 @@
 +++
-title = "A little bit of Rust: Ownership and Borrowing in Rust"
+title = "Ownership and Borrowing in Rust"
 date = 2025-08-09
 +++
 

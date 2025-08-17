@@ -1,5 +1,5 @@
 +++
-title = "A little bit of Rust: Comparing Array Iteration vs. C++ and Borrow Checker Safety"
+title = "Array Iteration in Rust vs. C++"
 date = 2025-08-12
 +++
 

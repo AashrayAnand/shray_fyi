@@ -1,5 +1,5 @@
 +++
-title = "A little bit of Rust: Non-Lexical Lifetimes and Mutability"
+title = "Non-Lexical Lifetimes in Rust"
 date = 2025-08-17
 +++
 
