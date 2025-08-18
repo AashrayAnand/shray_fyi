@@ -9,8 +9,9 @@ Distributed systems is the primary driver of this reading list, but there are ot
 
 1. [Raft Paper](https://raft.github.io/raft.pdf) -> Currently re-reading this, this time I am implementing it from hand as well.
 2. [Paxos in Paper Trail](https://www.the-paper-trail.org/post/2009-02-03-consensus-protocols-paxos/) -> Re-reading this as a follow up to the original Paxos paper, and before implementing this by hand. 
-3. [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
-4. [interpreter book](https://edu.anarcho-copy.org/Programming%20Languages/Go/writing%20an%20INTERPRETER%20in%20go.pdf) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
+3. [Chubby Lock Manager](https://storage.googleapis.com/gweb-research2023-media/pubtools/4444.pdf)
+4. [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
+5. [interpreter book](https://edu.anarcho-copy.org/Programming%20Languages/Go/writing%20an%20INTERPRETER%20in%20go.pdf) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
 
 Once the list above is exhausted will I revisit this list and add some more new topics from:
 
@@ -20,6 +21,7 @@ Once the list above is exhausted will I revisit this list and add some more new 
 4. [A DS Reading List](https://dancres.github.io/Pages/)
 5. [Reynold Xin Database Papers](https://github.com/rxin/db-readings)
 6. [Mark Brooker's Blog](https://brooker.co.za/blog/)
+7. [Christopher Meiklejohn DS Readings](https://christophermeiklejohn.com/distributed/systems/2013/07/12/readings-in-distributed-systems.html)
 
 I also want to use this list to archive some of the various things I have read before and may eventually want to revisit:
 
@@ -35,3 +37,8 @@ I also want to use this list to archive some of the various things I have read b
 10. [Snowflake](https://www.cs.cmu.edu/~15721-f24/papers/Snowflake.pdf) -> How Snowflake (similarly to Aurora) created a new mode of operation for cloud databases, this time elastically scaling data warehousing.
 11. [Aurora](https://pages.cs.wisc.edu/~yxy/cs764-f20/papers/aurora-sigmod-17.pdf) -> The database I actively work on, and an extremely innovative idea that changed how databases operate in the cloud. In short, why not let storage be able to replay the log, then we can separate storage and compute as distinctly elastic resources. You know it's genius because everyone has copied it since.
 12. [High Performance Browser Networking](https://hpbn.co/)
+13. [Cassandra](https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf) -> How I learned about LSM trees and first started understanding storage system architectures better.
+14. [Bitcask](https://riak.com/assets/bitcask-intro.pdf) -> Simpler than LSM trees, another log-based append storage engine.
+15. [ZooKeeper](https://www.usenix.org/legacy/event/atc10/tech/full_papers/Hunt.pdf) -> ZAB i Another classic consensus system that is an interesting highlight of this read.
+16. [Lakehouse](https://15721.courses.cs.cmu.edu/spring2024/papers/01-modern/armbrust-cidr21.pdf) -> More in the DB engine and architecture vein. an interesting read to understand where data systems are going in the current day, how can we get it all in terms of data warehousing, ACID, decoupled storage and compute.
+17. [MapReduce](https://storage.googleapis.com/gweb-research2023-media/pubtools/4449.pdf) -> Probably the first DS or parallel computing paper I ever read.
