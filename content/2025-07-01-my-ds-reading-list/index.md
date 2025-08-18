@@ -10,6 +10,7 @@ Distributed systems is the primary driver of this reading list, but there are ot
 - [Raft Paper](https://raft.github.io/raft.pdf) -> Currently re-reading this, this time I am implementing it from hand as well.
 - [Paxos in Paper Trail](https://www.the-paper-trail.org/post/2009-02-03-consensus-protocols-paxos/) -> Re-reading this as a follow up to the original Paxos paper, and before implementing this by hand. 
 - [Chubby Lock Manager](https://storage.googleapis.com/gweb-research2023-media/pubtools/4444.pdf)
+- [DynamoDB](https://pdos.csail.mit.edu/6.824/papers/atc23-idziorek.pdf)
 - [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
 - [interpreter book](https://edu.anarcho-copy.org/Programming%20Languages/Go/writing%20an%20INTERPRETER%20in%20go.pdf) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
 
@@ -34,11 +35,12 @@ I also want to use this list to archive some of the various things I have read b
 - [Google File System](https://static.googleusercontent.com/media/research.google.com/en/us/archive/gfs-sosp2003.pdf) -> GFS's general design for distributed append-only storage chunking and relaxed consistency is a pattern I feel like I see all over the place elsewhere.
 - [Spanner](https://static.googleusercontent.com/media/research.google.com/en/us/archive/spanner-osdi2012.pdf) -> The idea of planet-scale transactions and the ability to assign accurate timestamps is what makes this paper pretty awesome.
 - [FLP Paper](https://groups.csail.mit.edu/tds/papers/Lynch/jacm85.pdf) -> More of a core idea to remember than a paper I constantly revisit. Async systems can't guarantee consensus if any process can fail. [Paper Trail's Summary of FLP](https://www.the-paper-trail.org/post/2008-08-13-a-brief-tour-of-flp-impossibility/) is also good.
--  [Snowflake](https://www.cs.cmu.edu/~15721-f24/papers/Snowflake.pdf) -> How Snowflake (similarly to Aurora) created a new mode of operation for cloud databases, this time elastically scaling data warehousing.
--  [Aurora](https://pages.cs.wisc.edu/~yxy/cs764-f20/papers/aurora-sigmod-17.pdf) -> The database I actively work on, and an extremely innovative idea that changed how databases operate in the cloud. In short, why not let storage be able to replay the log, then we can separate storage and compute as distinctly elastic resources. You know it's genius because everyone has copied it since.
--  [High Performance Browser Networking](https://hpbn.co/)
--  [Cassandra](https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf) -> How I learned about LSM trees and first started understanding storage system architectures better.
--  [Bitcask](https://riak.com/assets/bitcask-intro.pdf) -> Simpler than LSM trees, another log-based append storage engine.
--  [ZooKeeper](https://www.usenix.org/legacy/event/atc10/tech/full_papers/Hunt.pdf) -> ZAB i Another classic consensus system that is an interesting highlight of this read.
--  [Lakehouse](https://15721.courses.cs.cmu.edu/spring2024/papers/01-modern/armbrust-cidr21.pdf) -> More in the DB engine and architecture vein. an interesting read to understand where data systems are going in the current day, how can we get it all in terms of data warehousing, ACID, decoupled storage and compute.
--  [MapReduce](https://storage.googleapis.com/gweb-research2023-media/pubtools/4449.pdf) -> Probably the first DS or parallel computing paper I ever read.
+- [Snowflake](https://www.cs.cmu.edu/~15721-f24/papers/Snowflake.pdf) -> How Snowflake (similarly to Aurora) created a new mode of operation for cloud databases, this time elastically scaling data warehousing.
+- [Aurora](https://pages.cs.wisc.edu/~yxy/cs764-f20/papers/aurora-sigmod-17.pdf) -> The database I actively work on, and an extremely innovative idea that changed how databases operate in the cloud. In short, why not let storage be able to replay the log, then we can separate storage and compute as distinctly elastic resources. You know it's genius because everyone has copied it since.
+- [High Performance Browser Networking](https://hpbn.co/)
+- [Cassandra](https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf) -> How I learned about LSM trees and first started understanding storage system architectures better.
+- [Bitcask](https://riak.com/assets/bitcask-intro.pdf) -> Simpler than LSM trees, another log-based append storage engine.
+- [ZooKeeper](https://www.usenix.org/legacy/event/atc10/tech/full_papers/Hunt.pdf) -> ZAB i Another classic consensus system that is an interesting highlight of this read.
+- [Lakehouse](https://15721.courses.cs.cmu.edu/spring2024/papers/01-modern/armbrust-cidr21.pdf) -> More in the DB engine and architecture vein. an interesting read to understand where data systems are going in the current day, how can we get it all in terms of data warehousing, ACID, decoupled storage and compute.
+- [MapReduce](https://storage.googleapis.com/gweb-research2023-media/pubtools/4449.pdf) -> Probably the first DS or parallel computing paper I ever read.
+- [Kademilia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) -> A pretty cool and simple P2P system design.
