@@ -1,5 +1,5 @@
 +++
-title = "My (Mostly Distributed Systems) Reading List"
+title = "My Reading List"
 date = 2025-07-01
 +++
 
@@ -12,17 +12,20 @@ Distributed systems is the primary driver of this reading list, but there are ot
 - [Chubby Lock Manager](https://storage.googleapis.com/gweb-research2023-media/pubtools/4444.pdf)
 - [DynamoDB](https://pdos.csail.mit.edu/6.824/papers/atc23-idziorek.pdf)
 - [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
-- [interpreter book](https://edu.anarcho-copy.org/Programming%20Languages/Go/writing%20an%20INTERPRETER%20in%20go.pdf) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
+- [interpreter book](https://interpreterbook.com/) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
+- [Effective Rust](https://www.lurklurk.org/effective-rust/)
 
 Once the list above is exhausted will I revisit this list and add some more new topics from:
 
 - [Awesome DS](https://github.com/theanalyst/awesome-distributed-systems)
 - [Paper Trail DS Theory](https://www.the-paper-trail.org/post/2014-08-09-distributed-systems-theory-for-the-distributed-systems-engineer/)
 - [Murat's Foundational DS List](https://muratbuffalo.blogspot.com/2021/02/foundational-distributed-systems-papers.html)
+- [Aleksey Charapko Reading Group](https://web.archive.org/web/20250328100831/https://charap.co/reading-group/)
 - [A DS Reading List](https://dancres.github.io/Pages/)
 - [Reynold Xin Database Papers](https://github.com/rxin/db-readings)
 - [Mark Brooker's Blog](https://brooker.co.za/blog/)
 - [Christopher Meiklejohn DS Readings](https://christophermeiklejohn.com/distributed/systems/2013/07/12/readings-in-distributed-systems.html)
+- [Crafting Interpreters](https://craftinginterpreters.com/)
 
 I also want to use this list to archive some of the various things I have read before and may eventually want to revisit:
 
@@ -44,3 +47,4 @@ I also want to use this list to archive some of the various things I have read b
 - [Lakehouse](https://15721.courses.cs.cmu.edu/spring2024/papers/01-modern/armbrust-cidr21.pdf) -> More in the DB engine and architecture vein. an interesting read to understand where data systems are going in the current day, how can we get it all in terms of data warehousing, ACID, decoupled storage and compute.
 - [MapReduce](https://storage.googleapis.com/gweb-research2023-media/pubtools/4449.pdf) -> Probably the first DS or parallel computing paper I ever read.
 - [Kademilia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) -> A pretty cool and simple P2P system design.
+- [Lamport Clocks](https://lamport.azurewebsites.net/pubs/time-clocks.pdf) -> The OG on why distributed systems are not that easy.

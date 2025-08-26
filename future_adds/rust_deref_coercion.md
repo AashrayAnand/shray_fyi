@@ -1,5 +1,5 @@
 +++
-title = "A little bit of Rust: Dereferencing and Deref Coercion"
+title = "Dereferencing and Deref Coercion in Rust"
 date = 2025-XX-XX
 +++
 
