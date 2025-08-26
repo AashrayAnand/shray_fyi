@@ -1,6 +1,6 @@
 +++
 title = "Google File System"
-date = 2025-08-26
+date = 2025-08-25
 +++
 
 > This is a re-hash of a post from my old Medium blog. Back then, I was reading system design papers but had not really worked on large-scale systems much yet, so it was harder to see the scope of impact of a system in the industry at-large, especially one as foundational as GFS, so I took a chance to revise and compare to my current work on Amazon Aurora.
