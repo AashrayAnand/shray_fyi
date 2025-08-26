@@ -1,9 +1,7 @@
 +++
-title = "Rust Polymorphization vs Monomorphization: Traits and Generics"
-date = 2025-08-26
+title = "Traits and Generics in Rust: Polymorphization vs Monomorphization"
+date = 2025-08-24
 +++
-
-# Rust Polymorphization vs Monomorphization: Traits and Generics
 
 Rust has the concepts of **Traits** and **Generics** that enable some of the OOP-style coding conventions and code re-use most people have seen before in Java, C++ or other OOP languages, but is not 1:1 with other languages and in some case provides safer code re-use at compile time.
 
@@ -78,6 +76,7 @@ This definitely tripped me up for a while in how I was composing code in Rust an
 When you use generics, Rust creates separate copies of your function for each concrete type used. This is called **monomorphization**.
 
 ```rust
+
 fn process<T: std::fmt::Display>(value: T) {
     println!("Processing: {}", value);
 }
@@ -101,6 +100,7 @@ This gives you **zero-cost abstractions** - no runtime overhead, but larger bina
 Trait objects like `Box<dyn Error>` use **dynamic dispatch** - one function handles multiple types at runtime through a vtable.
 
 ```rust
+
 fn handle_error(error: Box<dyn std::error::Error>) {
     println!("Error: {}", error);  // Calls through vtable
 }
@@ -115,7 +115,9 @@ fn main() {
 ```
 
 Internally, `Box<dyn Error>` contains:
+
 ```rust
+
 struct TraitObject {
     data: *mut (),           // Pointer to actual error
     vtable: *const VTable,   // Pointer to method implementations

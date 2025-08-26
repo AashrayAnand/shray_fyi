@@ -32,11 +32,15 @@ Interior mutability enforces "gates" to provide mutable data access. The Rust ty
 4. **`Cell<T>`** - Single-threaded interior mutability (copy types only)
 5. **`Atomic<T>`** - Lock-free atomic operations
 
+## Why is Interior Mutability not Breaking Rust Ownership Rules?
+
+I didn't really understand why interior mutability was allowed based on my initial understanding of Rust's ownership rules, especially the fact that it seemed to break my understanding that data must be specified, at compile time, to be referenced either mutably or immutably, while interior mutability allows for taking data, which was borrowed immutably, and then mutating inner state from this reference, doesn't this defeat the whole purpose of ownership?
+
+
+
 ## Example: Thread-Safe Key-Value Store
 
 We can see how interior mutability allows access to a multi-threaded hash table:
-
-### Rust Implementation
 
 ```rust
 
