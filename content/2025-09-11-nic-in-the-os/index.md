@@ -70,10 +70,9 @@ Some quick math (where we assume 2 control lines and 4 auxiliary lines are alloc
 
 As far as I can tell, this design also doesn't really acknowledge buffering in any specific fashion. It is optimized to handle fast-path RPCs, where requests and responses are small enough to fit in the allocated cache lines, and for larger requests that exceed these cache lines, or if the inbound request volume is saturing the NIC, and it already is processing a request for an endpoint, subsequent requests would have to be offloaded to the kernel (slow) path.
 
-From a security side, I also assume this can really only be leveraged for servers which do not receive public traffic, since we are expecting the NIC to be able to simply demux and route parsed packets, which if malicious, could theoretically result in corrupting memory, misdirecting RPCs and other issues.
-
 All these takeaways line up with the fact that this paper is funded by a grant from Google systems research, and I assume are driven by delivering a bespoke improvement provided a particular set of caveats:
 
-1. Traffic into the system can be trusted e.g. internal microservices in a data center.
-2. Small payloads, where requests and responses can be processed within a fixed set of cache lines.
-3. The number of connections does not exceed the number of cores on the system, or more specifically, the total cache lines across the system allocated for NIC RPC processing and dispatch, over the number of cache lines allocated to each connection.
+1. Small payloads, where requests and responses can be processed within a fixed set of cache lines.
+2. The number of connections does not exceed the number of cores on the system, or more specifically, the total cache lines across the system allocated for NIC RPC processing and dispatch, over the number of cache lines allocated to each connection.
+
+From a security side, I assumed that this would prevent the external services facing public traffic from leveraging the improvement, but DPU/IPU firewalling ensure that the NIC can be responsible for determining what traffic is trusted and can be accepted.
