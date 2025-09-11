@@ -5,15 +5,16 @@ date = 2025-07-25
 
 I wanted to quickly write up some notes about virtual memory at a high level as I was looking into how the linux ```mprotect``` interface works, for modifying the memory access protection level for specific areas of a process's virtual memory.
 
-This originally came up when I was looking into the write-up [here](https://stackoverflow.com/questions/18986264/mprotect-on-a-mmap-ed-shared-memory-segment), which does a good job of explaining why ```mprotect``` will not affect shared-memory access for all processes that memory map a shared memory segment, and instead only will apply on the process which applies the ```mprotect```.
+This originally came up when I was looking into this [stack overflow discussion](https://stackoverflow.com/questions/18986264/mprotect-on-a-mmap-ed-shared-memory-segment), which does a good job of explaining why ```mprotect``` will not affect shared-memory access for all processes that memory map a shared memory segment, and instead only will apply on the process which applies the ```mprotect```.
 
-Ulrich Drepper's ["What Every Programmer Should Know About Memory"](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf) is a dense, but invaluable reference to deeply understand what I briefly describe here. 
+Ulrich Drepper's ["What Every Programmer Should Know About Memory"](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf) is a dense, but invaluable reference to deeply understand what I briefly describe here.
 
 ## Introduction to Virtual Memory
 
 Virtual memory is a memory management technique that provides an abstraction of the storage resources available to a program. It maps memory addresses used by a program, called virtual addresses, into physical addresses in computer memory.
 
 Key benefits of virtual memory include:
+
 - Process isolation
 - Efficient memory utilization
 - Ability to use more memory than physically available through paging
@@ -71,7 +72,7 @@ struct mm_struct {
 
 The Translation Lookaside Buffer (TLB) is essentially a small, fast cache that stores recently used virtual-to-physical address translations. Modern processors often implement a multi-level TLB hierarchy with separate L1 TLBs for instructions and data.
 
-```
+```text
 L1 TLB (Split)
 Instruction TLB (iTLB)        Data TLB (dTLB)
 +-------------------+        +-------------------+
@@ -110,12 +111,14 @@ ASID: Address Space ID (process identifier)
 ```
 
 The TLB is fully associative, meaning any virtual page number can map to any TLB entry. When a virtual address is accessed:
+
 1. The virtual page number is extracted
 2. All TLB entries are checked in parallel
 3. If found (TLB hit), the physical frame is used
 4. If not found (TLB miss), the page table is walked
 
 Note: Actual TLB sizes and structure vary by processor. For example:
+
 - A typical L1 dTLB might have 64 entries
 - L1 iTLB might have 128 entries
 - L2 TLB might have 1024-1536 entries
@@ -125,10 +128,11 @@ Note: Actual TLB sizes and structure vary by processor. For example:
 The page table is a hierarchical data structure that maps virtual addresses to physical addresses. On modern x86_64 systems, this typically involves a 4-level page table, where each level is an array of 512 entries (2⁹ entries, since each level uses 9 bits as an index).
 
 Each level's entries contain either:
+
 - A physical address pointing to the next level's table (for PGD, PUD, PMD)
 - The actual physical page address and metadata (for PTE level)
 
-```
+```text
 Virtual Address (48 bits)
 +--------+--------+--------+--------+------------+
 |   PGD  |  PUD  |  PMD  |  PTE  |   Offset   |
@@ -155,6 +159,7 @@ Example entry (x86_64):
 ```
 
 During address translation, each 9-bit segment of the virtual address is used as an index into its corresponding table. For example:
+
 - Bits 39-47 index into the PGD array
 - Bits 30-38 index into the PUD array
 - Bits 21-29 index into the PMD array
@@ -172,7 +177,7 @@ The process of translating addresses in a process's virtual memory address space
 3. If the TLB cache and page table did not have entries for the virtual address, invoke the ```page_fault_handler```, to consult the process's virtual address space information further on how to address the access, looking up the corresponding virutal memory area for the address:
     - If the address's physical page is "swapped out" (written to disk), allocate a page in physical memory, read in the page, and update the page table.
     - If the address does not correspond to any virtual memory area, a segmentation fault occurs.
-4. Check whether the caller's access type matches the permissions for the page, otherwise a fault is generated. 
+4. Check whether the caller's access type matches the permissions for the page, otherwise a fault is generated.
 5. Update the TLB to include a new cache entry for the virtual address.
 
 ## Key Points About Virtual Memory

@@ -9,7 +9,7 @@ I recently took some notes when looking into the linux `mprotect` interface, whi
 
 The `/proc/[pid]/maps` file provides a detailed view of a process's memory mappings. Here's an example:
 
-```
+```text
 00400000-01b00000 r-xp 00000000 103:01 1705405  /path/to/executable
 01d00000-01d01000 r--p 01700000 103:01 1705405  /path/to/executable
 01d01000-01db0000 rw-p 01701000 103:01 1705405  /path/to/executable
@@ -23,6 +23,7 @@ ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0 [vsyscall]
 ```
 
 Each line contains:
+
 1. Address range (start-end)
 2. Permissions:
    - r: readable
@@ -47,6 +48,7 @@ Shared libraries are a prime example of memory sharing in Linux. Looking at the 
 ```
 
 Note the different sections:
+
 - r-xp: Read and execute (code)
 - r--p: Read-only data
 - rw-p: Read-write data (private copy-on-write)
@@ -55,13 +57,14 @@ Note the different sections:
 
 The heap segment is used for dynamic memory allocation. In our example:
 
-```
+```text
 2129c000-212bd000 rw-p 00000000 00:00 0         [heap]
 ```
 
 This shows a heap of approximately 132 KB (212bd000 - 2129c000 = 135168 bytes).
 
 Important aspects of heap memory:
+
 1. It can grow dynamically using `brk()` or `sbrk()`
 2. Large allocations might use `mmap()` instead
 3. Growth is not limited to the current size
@@ -95,6 +98,7 @@ void protect_memory_region(void* addr, size_t len) {
 ```
 
 Protection remains in effect until:
+
 1. Another `mprotect` call changes it
 2. The memory is unmapped
 3. The process terminates
@@ -178,12 +182,14 @@ area[0] = 'X';
 ```
 
 The kernel ensures:
+
 1. All memory accesses complete before protection changes
 2. Protection changes are fully visible before subsequent accesses
 3. TLB flushes act as memory barriers
 4. Memory operations cannot be speculated across protection changes
 
 These are some virtual memory basics, I will probably supplement this in the future with more writeups about some of the following:
+
 - Page tables and address translation
 - Memory allocator internals
 - NUMA memory management

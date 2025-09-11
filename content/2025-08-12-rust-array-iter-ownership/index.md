@@ -14,6 +14,7 @@ On one hand, the safe guards enforced by the borrow checker mean that compiled R
 Find the smallest positive integer that is not present in the array.
 
 **Example:**
+
 - Input: `[1, 2, 0]` → Output: `3`
 - Input: `[3, 4, -1, 1]` → Output: `2`
 - Input: `[7, 8, 9, 11, 12]` → Output: `1`
@@ -118,11 +119,13 @@ for num in &mut nums {  // Mutable borrow of nums
 
 **Error:**
 
-```
+```rust
+
 error: cannot borrow `nums` as immutable because it is also borrowed as mutable
 ```
 
 **Why This Happens:**
+
 - `&mut nums` creates a mutable borrow for the entire loop
 - `nums.len()` tries to create an immutable borrow while mutable borrow is active
 
@@ -139,6 +142,7 @@ for num in &nums {  // Immutable borrow of nums
 ```
 
 **Error:**
+
 ```rust
 
 error: cannot borrow `nums` as mutable because it is also borrowed as immutable
@@ -164,6 +168,7 @@ for (int i = 0; i < n; i++) {
 ```
 
 **C++ allows this because:**
+
 - No compile-time safety checks
 - Manual memory management
 - Runtime discipline required
@@ -182,6 +187,7 @@ for num in &mut nums {
 ```
 
 **Rust prevents this because:**
+
 - Compile-time borrow checking
 - Prevents data races
 - Ensures memory safety
@@ -336,14 +342,15 @@ for num in &mut nums {
 
 ## Common Rust Patterns for This Problem
 
-### **1. Pre-compute Values**
+### 1. Pre-compute Values
 
 ```rust
 
 let len = nums.len() as i32;  // Avoid borrow conflicts
 ```
 
-### **2. Index-Based Iteration**
+### 2. Index-Based Iteration
+
 ```rust
 
 for i in 0..nums.len() {  // When you need to modify while iterating

@@ -6,16 +6,16 @@ date = 2025-08-09
 Rust's type system provides two complementary safety mechanisms, **Ownership**, and **Borrowing**, which together provide memory and logical safety guarantees that are impossible to achieve at compile time in other languages.
 
 ### Ownership
+
 - Prevents double-free, use-after-free, memory leaks
 - Ensures each piece of memory has exactly one owner
 - Guarantees proper cleanup when values go out of scope
 
 ### Borrowing
+
 - Prevents data races, undefined behavior, non-deterministic access
 - Ensures controlled access to shared data
 - Prevents iterator invalidation and other logical bugs
-
-## Ownership
 
 ### Rust's Ownership Rules
 
@@ -114,8 +114,6 @@ void process_data() {
 }
 ```
 
-## Borrowing
-
 ### Rust's Borrowing Rules
 
 ```rust
@@ -186,6 +184,7 @@ int* ref2 = &data[0];
 ```
 
 #### 3. **Iterator Safety**
+
 ```rust
 
 // Rust: Iterator invalidation prevented at compile time

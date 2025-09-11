@@ -8,8 +8,14 @@ Interior mutability is a Rust pattern that allows you to mutate data even when y
 ## The Core Problem
 
 In Rust, the borrow checker enforces that:
+<<<<<<< HEAD
 - You can have multiple immutable references (**&T**) to the same data
 - You can have exactly one mutable reference (**&mut T**) to the same data
+=======
+
+- You can have multiple immutable references (`&T`) to the same data
+- You can have exactly one mutable reference (`&mut T`) to the same data
+>>>>>>> 3ef397d (Fixed a bunch of formatting stuff, and wrote up my paper review for the NIC should be part of the OS, from first distsys fall25 reading group.)
 - You cannot have both immutable and mutable references simultaneously
 
 This creates a challenge: **How can we decide (after compile time) that we want to mutate some data that has been deemed immutable, and is this possible without violating Rust's safety guarantees?**
