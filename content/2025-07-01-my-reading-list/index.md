@@ -3,28 +3,29 @@ title = "My Reading List"
 date = 2025-07-01
 +++
 
+[Last Updated on 9/29/2025]
+
 I have had tons of different bookmarks in my reading list to eventually get back to and read but they get mixed up and shifted around and I naturally let my ADHD-infused thought process clutter it up and randomize my time. I am going to try and avoid that by dumping my reading list into the blog directly, and forcing myself to get through everything here in the order that I have laid out from the beginning, rather than constantly randomizing over the endless different things I eventually want to learn.
 
 Distributed systems is the primary driver of this reading list, but there are other tidbits and tangents along the way that I want to get back to that are also captured here.
 
 - [Raft Paper](https://raft.github.io/raft.pdf) -> Currently re-reading this, this time I am implementing it from hand as well.
-- [Paxos in Paper Trail](https://www.the-paper-trail.org/post/2009-02-03-consensus-protocols-paxos/) -> Re-reading this as a follow up to the original Paxos paper, and before implementing this by hand. 
-- [Chubby Lock Manager](https://storage.googleapis.com/gweb-research2023-media/pubtools/4444.pdf)
-- [DynamoDB](https://pdos.csail.mit.edu/6.824/papers/atc23-idziorek.pdf)
-- [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
-- [interpreter book](https://interpreterbook.com/) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
-- [Effective Rust](https://www.lurklurk.org/effective-rust/)
+- [Aleksey Charapko Fall25 Reading Group](https://charap.co/fall-2025-reading-list-201-210/) -> Reading a paper a week, trying to write about at least a few.
+- [Effective Rust](https://www.lurklurk.org/effective-rust/) -> Read bits and pieces here and there day-to-day, especially as I'm now going to start hacking on Rust at my day job.
 
 Once the list above is exhausted will I revisit this list and add some more new topics from:
 
 - [Awesome DS](https://github.com/theanalyst/awesome-distributed-systems)
 - [Paper Trail DS Theory](https://www.the-paper-trail.org/post/2014-08-09-distributed-systems-theory-for-the-distributed-systems-engineer/)
+- [DynamoDB](https://pdos.csail.mit.edu/6.824/papers/atc23-idziorek.pdf)
 - [Murat's Foundational DS List](https://muratbuffalo.blogspot.com/2021/02/foundational-distributed-systems-papers.html)
-- [Aleksey Charapko Reading Group](https://web.archive.org/web/20250328100831/https://charap.co/reading-group/)
+- [Aleksey Charapko Reading Group Archive](https://web.archive.org/web/20250328100831/https://charap.co/reading-group/)
 - [A DS Reading List](https://dancres.github.io/Pages/)
 - [Reynold Xin Database Papers](https://github.com/rxin/db-readings)
 - [Mark Brooker's Blog](https://brooker.co.za/blog/)
 - [Christopher Meiklejohn DS Readings](https://christophermeiklejohn.com/distributed/systems/2013/07/12/readings-in-distributed-systems.html)
+- [interpreter book](https://interpreterbook.com/) and [compiler book](https://compilerbook.com/) -> Some weekend reading when I get a chance to hack these together, preferably in Rust.
+- [Attention is All you Need](https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) -> Trying to make more time for AI-related theory.
 - [Crafting Interpreters](https://craftinginterpreters.com/)
 
 I also want to use this list to archive some of the various things I have read before and may eventually want to revisit:
