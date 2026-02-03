@@ -1,6 +1,6 @@
 +++
 title = Anthropic is Rethinking AI Learning and So am I?"
-date = 2025-09-11
+date = 2026-02-01
 +++
 
 Anthropic recently put out a really interesting [paper](https://www.anthropic.com/research/AI-assistance-coding-skills) that tries to understand the impact of AI usage on learning, which anecdotally feels very in line with my personal experience so far using AI in both my work, and my own personal learning.
