@@ -1,5 +1,5 @@
 +++
-title = An AI-generated Rust Learning Plan"
+title = "An AI-generated Rust Learning Plan"
 date = 2026-02-03
 +++
 

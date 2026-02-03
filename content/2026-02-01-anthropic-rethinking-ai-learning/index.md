@@ -1,5 +1,5 @@
 +++
-title = Anthropic is Rethinking AI Learning and So am I?"
+title = "Anthropic is Rethinking AI Learning and So am I?"
 date = 2026-02-01
 +++
 
